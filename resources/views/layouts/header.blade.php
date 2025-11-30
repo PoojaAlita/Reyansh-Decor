@@ -3,7 +3,7 @@
             <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-4">
               <a href="{{ route('dashboard') }}" class="app-brand-link gap-2">
                 <span class="app-brand-logo">
-                     <img src="{{ asset('image/logo/logo.png') }}" alt="Full Logo" class="full-logo" height="50"
+                     <img src="{{ asset('image/logo/logo.png') }}" alt="Full Logo" class="full-logo" height="60"
                     id="full-logo">
                 </span>
               </a>

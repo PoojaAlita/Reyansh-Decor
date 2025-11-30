@@ -222,7 +222,7 @@ $(document).ready(function () {
             })
         });
 
-       $(document).on('click', '.toggle-status', function () {
+ $(document).on('click', '.toggle-status', function () {
     var btn = $(this);
     var id = btn.data('id');
     var status = btn.data('status');

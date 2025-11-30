@@ -28,21 +28,32 @@ function toaster_message(message, icon, url) {
                         type: "GET",
                         success: function (response) {
                             // Get only new tbody HTML
-                            let newBody = $(response).find(tableId + " tbody").html();
+                            // let newBody = $(response).find(tableId + " tbody").html();
+                                                    let newBody = $(response).find(tableId + " tbody").html() || "";
 
-                            if (newBody && newBody.trim() !== "") {
+
+                            // if (newBody && newBody.trim() !== "") {
                                 // ✅ Replace only tbody (keep table instance)
                                 $(tableId + " tbody").html(newBody);
+
 
                                 // ✅ Reinitialize tooltips
                                 $('[data-bs-toggle="tooltip"]').tooltip();
 
+                                 $('#screenModal select').select2({
+                                    dropdownParent: $('#screenModal'),
+                                    width: '100%',
+                                    placeholder: "--Select--",
+                                    allowClear: false
+                                });
+
                                 // ✅ No need to destroy/recreate DataTable
                                 // It will keep pagination and features
-                            } else {
-                                console.warn("⚠️ No tbody found in response for:", tableId);
-                            }
+                            // } else {
+                            //     console.warn("⚠️ No tbody found in response for:", tableId);
+                            // }
                         },
+
                         error: function (xhr) {
                             console.error("❌ Failed to refresh table:", xhr.responseText);
                         }

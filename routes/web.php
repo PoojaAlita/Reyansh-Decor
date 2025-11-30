@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ProfileController,AdminController,AdminIconController,AdminPageController};
+use App\Http\Controllers\{ProfileController,AdminController,AdminIconController,AdminPageController,CategoryController,SubCategoryController,ChildCategoryController,ProductController,ProductImageController,ProductVariantController};
 use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
@@ -45,6 +45,73 @@ Route::prefix('admin-pages')->group(function () {
     Route::post('/get-sorting', [AdminPageController::class, 'getAdminPagesForSorting']);
     Route::post('/save-sorting', [AdminPageController::class, 'saveAdminPagesPosition']);
 });
+
+
+Route::controller(CategoryController::class)->group(function () {
+    Route::get('/category', 'index')->name('category');
+    Route::post('/category/store', 'store');
+    Route::post('/category/edit', 'edit');
+    Route::post('/category/delete', 'delete');
+    Route::post('/category/toggle-status', 'toggleStatus');
+    Route::post('/category/check-name', 'checkCategoryUnique');
+});
+
+// ========================
+//      SUB CATEGORY
+// ========================
+Route::get('/subcategory', [SubCategoryController::class, 'index']);
+Route::post('/subcategory/store', [SubCategoryController::class, 'store']);
+Route::post('/subcategory/edit', [SubCategoryController::class, 'edit']);
+Route::post('/subcategory/delete', [SubCategoryController::class, 'delete']);
+Route::post('/subcategory/toggle-status', [SubCategoryController::class, 'toggleStatus']);
+Route::post('/subcategory/check-name', [SubCategoryController::class, 'checkSubCategoryUnique']);
+
+Route::prefix('childcategory')->group(function () {
+    Route::get('/', [ChildCategoryController::class, 'index']);
+    Route::post('/store', [ChildCategoryController::class, 'store']);
+    Route::post('/edit', [ChildCategoryController::class, 'edit']);
+    Route::post('/delete', [ChildCategoryController::class, 'delete']);
+    Route::post('/toggle-status', [ChildCategoryController::class, 'toggleStatus']);
+    Route::post('/check-name', [ChildCategoryController::class, 'checkChildCategoryUnique']);
+});
+
+// Products Module
+Route::controller(ProductController::class)->group(function () {
+    Route::get('/product', 'index');
+    Route::post('/product/store', 'store');
+    Route::post('/product/edit', 'edit');
+    Route::post('/product/delete', 'delete');
+    Route::post('/product/toggle-status', 'toggleStatus');
+    Route::post('/product/check-name', 'checkNameUnique');
+
+    Route::post('/product/get-subcategories', 'getSubcategories');
+    Route::post('/product/get-childcategories', 'getChildcategories');
+    
+});
+
+Route::controller(ProductImageController::class)->group(function () {
+
+    Route::get('/productimages', 'index');
+    Route::post('/productimages/store', 'store');
+    Route::post('/productimages/edit', 'edit');
+    Route::post('/productimages/delete', 'delete');
+    Route::post('/productimages/toggle-status', 'toggleStatus');
+
+});
+
+
+Route::get('/productvariants', [ProductVariantController::class, 'index']);
+Route::post('/productvariants/store', [ProductVariantController::class, 'store']);
+Route::post('/productvariants/edit', [ProductVariantController::class, 'edit']);
+Route::post('/productvariants/delete', [ProductVariantController::class, 'delete']);
+Route::post('/productvariants/toggle-status', [ProductVariantController::class, 'toggleStatus']);
+Route::post('/productvariants/check-variant', [ProductVariantController::class, 'checkProductVariantUnique']);
+
+
+
+
+
+
 
 
 require __DIR__.'/auth.php';
