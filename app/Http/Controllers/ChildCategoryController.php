@@ -4,15 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{ChildCategory, SubCategory};
+use App\Models\{ChildCategory};
 use Illuminate\Support\Facades\Auth;
 
 class ChildCategoryController extends Controller
 {
      public function index() {
-        $subcategories = SubCategory::where('isshown', 1)->get();
-        $child_categories = ChildCategory::with('subcategory')->latest()->get();
-        return view('pages.childcategory', compact('child_categories','subcategories'));
+        return view('pages.childcategory');
     }
 
     public function store(Request $request) {

@@ -3,12 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
 
@@ -36,7 +30,7 @@
         </thead>
 
         <tbody>
-          @foreach($subcategories as $key => $sc)
+          @foreach(\App\Models\SubCategory::latest()->cursor() as $key => $sc)
           <tr>
             <td>{{ $key + 1 }}</td>
             <td>{{ $sc->category->name ?? '-' }}</td>
@@ -98,8 +92,8 @@
           <label class="form-label">Category</label>
           <select id="category_id" name="category_id" class="form-control select2 mb-2">
             <option value="" disabled selected>Select Category</option>
-            @foreach($categories as $cat)
-            <option value="{{ $cat->id }}">{{ ucfirst($cat->name) }}</option>
+            @foreach(\App\Models\Category::latest()->cursor() as $key => $cat)
+              <option value="{{ $cat->id }}">{{ ucfirst($cat->name) }}</option>
             @endforeach
           </select>
 
@@ -125,10 +119,6 @@
 @section('plugin-script')
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 
 <script>
@@ -175,9 +165,10 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#subcategory_form").validate().resetForm();
     $('#subcategory_form')[0].reset();
+    $('#subcategory_form').find('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
-     $('#subcategoryModal select').each(function() {
+    $('#subcategoryModal select').each(function() {
         $(this).val(null).trigger('change');
     });
     new bootstrap.Modal(document.getElementById('subcategoryModal')).show();

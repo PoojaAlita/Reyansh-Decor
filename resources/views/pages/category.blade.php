@@ -3,12 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
 @endsection
 
 @section('content')
@@ -33,7 +27,7 @@
         </thead>
 
         <tbody>
-          @foreach($categories as $key => $cat)
+          @foreach(\App\Models\Category::latest()->cursor() as $key => $cat)
           <tr>
             <td>{{ $key + 1 }}</td>
             <td>{{ ucfirst($cat->name) }}</td>
@@ -108,11 +102,6 @@
 
 @section('plugin-script')
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
-
 <script>
 
 $('#category_tbl').DataTable();
@@ -153,6 +142,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#category_form").validate().resetForm();
     $('#category_form')[0].reset();
+    $('#category_form').find('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
     new bootstrap.Modal(document.getElementById('categoryModal')).show();
     $('#categoryModal').on('shown.bs.modal', function () { $("#name").trigger('focus'); });

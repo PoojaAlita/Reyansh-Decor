@@ -42,6 +42,7 @@
                                     function renderPageRows($pages, $parentId = 0, $level = 0)
                                     {
                                        foreach ($pages->where('parent_id', $parentId)->sortByDesc('id') as $key => $p) {
+ 
                                             echo '<tr>';
                                             echo '<td>' . $key + 1  . '</td>';
                                             echo '<td>' .   
@@ -114,6 +115,7 @@
                         <div id="menuTree">
                             <ul>
                                 @foreach ($pages->where('parent_id', 0) as $menu)
+
                                     <li data-jstree='{"icon" : "{{ $menu->icon ?? 'bx bx-folder' }}"}'>
                                         {{ $menu->title }}
                                         @php $children = $pages->where('parent_id', $menu->id); @endphp
@@ -188,7 +190,7 @@
                                 <div class="col-md-4">
                                     <label>Menu</label>
                                     <select class="form-select mySelect2" name="ddlMenu" id="ddlMenu">
-                                        <option value="">Select Menu</option>
+                                        <option value="" disabled selected>Select Menu</option>
                                         <option value="0">Root Menu</option>
 
                                         @foreach ($pages->where('parent_id', 0) as $parent)
@@ -249,328 +251,339 @@
 @endsection
 
 @section('plugin-script')
-
     <!-- Vendors JS -->
     <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/jstree/jstree.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}" ></script>
     <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
 
+<script>
 
-
-    <script>
-$(document).ready(function () {
-
-            if ($.fn.DataTable.isDataTable('#admin-pages_tbl')) {
-                $('#admin-pages_tbl').DataTable().clear().destroy();
-            }
-
-            $('#admin-pages_tbl').DataTable({
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                ordering: false,
-                searching: true,
-                lengthChange: true
+            $('.mySelect2').select2({
+                width: '100%',
+                allowClear: false
             });
 
-        });
+            $(document).ready(function() {
 
+                if ($.fn.DataTable.isDataTable('#admin-pages_tbl')) {
+                    $('#admin-pages_tbl').DataTable().clear().destroy();
+                }
 
-        $('.mySelect2').select2({
-            width: '100%',
-            allowClear: false
-        });
-
-        $(document).ready(function() {
-
-
-            // Add button
-            $('#btnAddNew').click(() => {
-                $("#pageForm").validate().resetForm();
-                $('#formSection').slideDown();
-                $('#formTitle').text('Add New');
-                $('#hId').val(0);
-                $('#pageForm')[0].reset();
-                 $('.mySelect2').each(function() {
-                    $(this).val(null).trigger('change');
+                $('#admin-pages_tbl').DataTable({
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    ordering: false,
+                    searching: true,
+                    lengthChange: true
                 });
 
-                $("#ddlMenu").trigger('focus');
-            });
+                /* VALIDATION */
+                $("#pageForm").validate({
+                    rules: {
+                        txtName: { required: true}
+                    },
+                    messages: {
+                        txtName: { required: "Please Enter Menu Name" }
+                    },
+                    errorElement: "div",
+                    errorClass: "text-danger mt-1",
+                    errorPlacement: function (error, element) { error.insertAfter(element); },
+                    highlight: function (element) { $(element).addClass("is-invalid"); },
+                    unhighlight: function (element) { $(element).removeClass("is-invalid"); }
+                });
 
-            $('.submitPages').click(function(e){
-                e.preventDefault();
-                var form = $('#pageForm')[0];
-                var data = new FormData(form);
+                // Add button
+                $('#btnAddNew').click(() => {
+                    $("#pageForm").validate().resetForm();
+                    $('#formSection').slideDown();
+                    $('#formTitle').text('Add New');
+                    $('#hId').val(0);
+                    $('#pageForm')[0].reset();
+                    $('#pageForm').find('.is-invalid').removeClass('is-invalid');
 
-                $.ajax({
-                    url: '/admin-pages/store',
-                    type: 'POST',
-                    data: data,
-                    processData: false,
-                    contentType: false,
-                    success: function(data){
-                        $('#formSection').hide();
+                    $('.mySelect2').each(function() {
+                        $(this).val(null).trigger('change');
+                    });
+
+                    $("#ddlMenu").trigger('focus');
+                });
+
+                $('.submitPages').click(function(e){
+                    e.preventDefault();
+                    var form = $('#pageForm')[0];
+                    var data = new FormData(form);
+                    if($("#pageForm").valid()){
+    
+                        $.ajax({
+                            url: '/admin-pages/store',
+                            type: 'POST',
+                            data: data,
+                            processData: false,
+                            contentType: false,
+                            success: function(data){
+                                $('#formSection').hide();
+                                $('#tableSection').show();
+                                $('#viewSection').show();
+                                toaster_message(data.message, data.icon);
+                                    $.get('/admin-pages/menu-html', function(html) {
+                                    $('#layout-menu').replaceWith(html);
+
+                                    // ⭐ Reinitialize horizontal menu
+                                    const layoutMenu = document.querySelector('#layout-menu');
+                                    if(layoutMenu) {
+                                        const menu = new Menu(layoutMenu, { orientation: 'horizontal' });
+                                        menu.init();
+                                    }
+
+                                    // Optional: sidebar toggle helper
+                                    if (typeof window.Helpers !== "undefined") {
+                                        window.Helpers.initSidebarToggle();
+                                    }
+                                });
+                                
+                            },
+                            error: function (xhr) {
+                                toaster_message('Something went wrong!', 'error');
+                            }
+                        });
+                    }
+                });
+
+
+                $('#btnCancel').click(() => $('#formSection').slideUp());
+
+
+                // Edit
+                $(document).on('click', '.editPage', function() {
+                    let id = $(this).data('id');
+                    $.post("{{ route('admin.pages.edit') }}", {
+                        id,
+                        _token: '{{ csrf_token() }}'
+                    }, function(data) {
+
+                        showForm();
+
+                        // Now populate the form
+                        $('#formTitle').text('Edit Page');
+                        $('#hId').val(data.id);
+                        $('#ddlMenu').val(data.parent_id).trigger('change');
+                        $('#txtName').val(data.title);
+                        $('#txtUrl').val(data.url);
+                        $('#ddlIcon').val(data.icon).trigger('change');
+                    });
+                });
+
+
+                // Delete icon
+                $(document).on("click", ".delete", function() {
+                    var id = $(this).data('id');
+                    const swalWithBootstrapButtons = Swal.mixin({
+                        customClass: {
+                            confirmButton: 'btn btn-success',
+                            cancelButton: 'btn btn-danger me-2'
+                        },
+                        buttonsStyling: false,
+                    })
+                    swalWithBootstrapButtons.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete it!',
+                        cancelButtonText: 'No, cancel!',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.value) {
+                            $.ajax({
+                                url: aurl + "/admin-pages/delete",
+                                type: "POST",
+                                dataType: "JSON",
+                                data: {
+                                    id: id
+                                },
+                                success: function(data) {
+                                    if (data.status) {
+                                        toaster_message(data.message, data.icon);
+                                        $.get('/admin-pages/menu-html', function(html) {
+                                            $('#layout-menu').replaceWith(html);
+
+                                            // ⭐ Reinitialize menu after replacement ⭐
+                                            const layoutMenu = document.querySelector('#layout-menu');
+                                            if(layoutMenu) {
+                                                const menu = new Menu(layoutMenu, { orientation: 'horizontal' }); // horizontal menu init
+                                                menu.init();
+                                            }
+
+                                            // Agar sidebar toggle helper hai
+                                            if (typeof window.Helpers !== "undefined") {
+                                                window.Helpers.initSidebarToggle();
+                                            }
+                                        });
+
+                                    } else {
+                                        toaster_message(data.message, data.icon);
+                                    }
+
+                                },
+                                error: function(error) {
+                                    swalWithBootstrapButtons.fire('Cancelled',
+                                        'this data is not available :)', 'error')
+                                }
+                            });
+
+                        } else if (result.dismiss === Swal.DismissReason.cancel) {
+                            swalWithBootstrapButtons.fire('Cancelled', 'Your data is safe :)', 'error')
+                        }
+                    })
+                });
+
+                $(document).on('click', '.toggle-status', function () {
+                    var btn = $(this);
+                    var id = btn.data('id');
+                    var status = btn.data('status');
+
+                    // Hide & remove any active tooltip to prevent stacking
+                    btn.tooltip('hide');
+                    $(".tooltip").remove();
+
+                    $.ajax({
+                        url: '/admin-pages/toggle-status',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            status: status,
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function (response) {
+                            if (!response.success) {
+                                alert(response.message || 'Something went wrong');
+                                return;
+                            }
+
+                            // Dispose old tooltip instance if any
+                            try { btn.tooltip('dispose'); } catch (e) {}
+
+                            // Toggle button state and tooltip title
+                            if (status == 0) {
+                                btn.removeClass('btn-success')
+                                .addClass('btn-danger')
+                                .html('<i class="bx bx-hide"></i>')
+                                .attr('title', 'Click here to enable')
+                                .data('status', 1);
+                            } else {
+                                btn.removeClass('btn-danger')
+                                .addClass('btn-success')
+                                .html('<i class="bx bx-show"></i>')
+                                .attr('title', 'Click here to disable')
+                                .data('status', 0);
+                            }
+
+                            // Reinitialize tooltip on the same button
+                            btn.tooltip({ container: 'body' });
+
+                            // Show toaster alert
+                            toaster_alert_action(response.message, response.icon);
+                        },
+                        error: function (xhr) {
+                            console.error(xhr);
+                            alert('Request failed. Check console for details.');
+                        }
+                    });
+                });
+
+
+                // Sorting
+                $('#ddlMenuForSorting').change(function() {
+                    let parentid = $(this).val();
+
+                    $.post('/admin-pages/get-sorting', {
+                        parentid,
+                        _token: '{{ csrf_token() }}'
+                    }, function(data) {
+                        $('#sortable').empty();
+
+                        if (data) {
+                            let arr = data.split('^');
+                            arr.forEach((item, i) => {
+                                let parts = item.split('-');
+
+                                $('#sortable').append(
+                                    '<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" ' +
+                                    'data-id="' + parts[0] + '">' +
+                                    '<span><i class="fas fa-sort"></i> ' + (i + 1) + '. ' +
+                                    parts[1] + '</span>' +
+                                    '</li>'
+                                );
+                            });
+
+                            // Enable jQuery UI Sortable
+                            $('#sortable').sortable();
+                        }
+                    });
+                });
+
+
+                $('#btnSaveSort').click(function() {
+                    let order = [];
+                    $('#sortable li').each(function(i, li) {
+                        order.push((i + 1) + '^' + $(li).data('id'));
+                    });
+
+                    $.post('/admin-pages/save-sorting', {
+                        order,
+                        _token: '{{ csrf_token() }}'
+                    }, function() {
+                        $('#sortingSection').hide();
+                        toaster_alert_action('Sorting updated successfully!', 'success');
                         $('#tableSection').show();
                         $('#viewSection').show();
-                        toaster_message(data.message, data.icon);
-                            $.get('/admin-pages/menu-html', function(html) {
-                            $('#layout-menu').replaceWith(html);
 
-                            // ⭐ Reinitialize horizontal menu
-                            const layoutMenu = document.querySelector('#layout-menu');
-                            if(layoutMenu) {
-                                const menu = new Menu(layoutMenu, { orientation: 'horizontal' });
-                                menu.init();
-                            }
-
-                            // Optional: sidebar toggle helper
-                            if (typeof window.Helpers !== "undefined") {
-                                window.Helpers.initSidebarToggle();
-                            }
-                        });
-                        
-                    },
-                    error: function (xhr) {
-                        toaster_message('Something went wrong!', 'error');
-                    }
+                    });
                 });
-            });
 
-
-            $('#btnCancel').click(() => $('#formSection').slideUp());
-
-
-            // Edit
-            $(document).on('click', '.editPage', function() {
-                let id = $(this).data('id');
-                $.post("{{ route('admin.pages.edit') }}", {
-                    id,
-                    _token: '{{ csrf_token() }}'
-                }, function(data) {
-
-                    showForm();
-
-                    // Now populate the form
-                    $('#formTitle').text('Edit Page');
-                    $('#hId').val(data.id);
-                    $('#ddlMenu').val(data.parent_id).trigger('change');
-                    $('#txtName').val(data.title);
-                    $('#txtUrl').val(data.url);
-                    $('#ddlIcon').val(data.icon).trigger('change');
-                });
-            });
-
-
-            // Delete icon
-            $(document).on("click", ".delete", function() {
-                var id = $(this).data('id');
-                const swalWithBootstrapButtons = Swal.mixin({
-                    customClass: {
-                        confirmButton: 'btn btn-success',
-                        cancelButton: 'btn btn-danger me-2'
-                    },
-                    buttonsStyling: false,
-                })
-                swalWithBootstrapButtons.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'No, cancel!',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.value) {
-                        $.ajax({
-                            url: aurl + "/admin-pages/delete",
-                            type: "POST",
-                            dataType: "JSON",
-                            data: {
-                                id: id
-                            },
-                            success: function(data) {
-                                if (data.status) {
-                                    toaster_message(data.message, data.icon);
-                                      $.get('/admin-pages/menu-html', function(html) {
-                                        $('#layout-menu').replaceWith(html);
-
-                                        // ⭐ Reinitialize menu after replacement ⭐
-                                        const layoutMenu = document.querySelector('#layout-menu');
-                                        if(layoutMenu) {
-                                            const menu = new Menu(layoutMenu, { orientation: 'horizontal' }); // horizontal menu init
-                                            menu.init();
-                                        }
-
-                                        // Agar sidebar toggle helper hai
-                                        if (typeof window.Helpers !== "undefined") {
-                                            window.Helpers.initSidebarToggle();
-                                        }
-                                    });
-
-                                } else {
-                                    toaster_message(data.message, data.icon);
-                                }
-
-                            },
-                            error: function(error) {
-                                swalWithBootstrapButtons.fire('Cancelled',
-                                    'this data is not available :)', 'error')
-                            }
-                        });
-
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                        swalWithBootstrapButtons.fire('Cancelled', 'Your data is safe :)', 'error')
-                    }
-                })
-            });
-
-            $(document).on('click', '.toggle-status', function () {
-                var btn = $(this);
-                var id = btn.data('id');
-                var status = btn.data('status');
-
-                // Hide & remove any active tooltip to prevent stacking
-                btn.tooltip('hide');
-                $(".tooltip").remove();
-
-                $.ajax({
-                    url: '/admin-pages/toggle-status',
-                    type: 'POST',
-                    data: {
-                        id: id,
-                        status: status,
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function (response) {
-                        if (!response.success) {
-                            alert(response.message || 'Something went wrong');
-                            return;
+                // JSTree
+                $('#menuTree').jstree({
+                    core: {
+                        themes: {
+                            responsive: true,
+                            "variant": "large",
+                            "dots": true,
+                            "icons": true
                         }
-
-                        // Dispose old tooltip instance if any
-                        try { btn.tooltip('dispose'); } catch (e) {}
-
-                        // Toggle button state and tooltip title
-                        if (status == 0) {
-                            btn.removeClass('btn-success')
-                            .addClass('btn-danger')
-                            .html('<i class="bx bx-hide"></i>')
-                            .attr('title', 'Click here to enable')
-                            .data('status', 1);
-                        } else {
-                            btn.removeClass('btn-danger')
-                            .addClass('btn-success')
-                            .html('<i class="bx bx-show"></i>')
-                            .attr('title', 'Click here to disable')
-                            .data('status', 0);
-                        }
-
-                        // Reinitialize tooltip on the same button
-                        btn.tooltip({ container: 'body' });
-
-                        // Show toaster alert
-                        toaster_alert_action(response.message, response.icon);
                     },
-                    error: function (xhr) {
-                        console.error(xhr);
-                        alert('Request failed. Check console for details.');
-                    }
-                });
-            });
-
-
-            // Sorting
-            $('#ddlMenuForSorting').change(function() {
-                let parentid = $(this).val();
-
-                $.post('/admin-pages/get-sorting', {
-                    parentid,
-                    _token: '{{ csrf_token() }}'
-                }, function(data) {
-                    $('#sortable').empty();
-
-                    if (data) {
-                        let arr = data.split('^');
-                        arr.forEach((item, i) => {
-                            let parts = item.split('-');
-
-                            $('#sortable').append(
-                                '<li class="list-group-item drag-item cursor-move d-flex justify-content-between align-items-center" ' +
-                                'data-id="' + parts[0] + '">' +
-                                '<span><i class="fas fa-sort"></i> ' + (i + 1) + '. ' +
-                                parts[1] + '</span>' +
-                                '</li>'
-                            );
-                        });
-
-                        // Enable jQuery UI Sortable
-                        $('#sortable').sortable();
-                    }
-                });
-            });
-
-
-            $('#btnSaveSort').click(function() {
-                let order = [];
-                $('#sortable li').each(function(i, li) {
-                    order.push((i + 1) + '^' + $(li).data('id'));
                 });
 
-                $.post('/admin-pages/save-sorting', {
-                    order,
-                    _token: '{{ csrf_token() }}'
-                }, function() {
-                    $('#sortingSection').hide();
-                    toaster_alert_action('Sorting updated successfully!', 'success');
-                    $('#tableSection').show();
-                    $('#viewSection').show();
-
+                // auto open first-level menus
+                $('#menuTree').on('ready.jstree', function() {
+                    $('#menuTree').jstree('open_all');
                 });
+
+
+                // Hide/Show Logic
+                function showTable() {
+                    $('#formSection, #sortingSection').hide();
+                    $('#tableSection, #viewSection').fadeIn(300);
+                }
+
+                function showForm() {
+                    $('#tableSection, #viewSection, #sortingSection').hide();
+                    $('#formSection').fadeIn(300);
+                }
+
+                function showSorting() {
+                    $('#tableSection, #viewSection').hide();
+                    $('#sortingSection').fadeIn(300);
+                }
+
+                // Button actions
+                $('#btnAddNew').click(showForm);
+                $('.editPage').click(showForm);
+                $('#btnCancel, #btnCancelForm').click(showTable);
+                $('#btnSorting, #btnSortingRight').click(showSorting);
+                $('#btnCloseSort').click(showTable);
+
             });
-
-            // JSTree
-            $('#menuTree').jstree({
-                core: {
-                    themes: {
-                        responsive: true,
-                        "variant": "large",
-                        "dots": true,
-                        "icons": true
-                    }
-                },
-            });
-
-            // auto open first-level menus
-            $('#menuTree').on('ready.jstree', function() {
-                $('#menuTree').jstree('open_all');
-            });
-
-
-            // Hide/Show Logic
-            function showTable() {
-                $('#formSection, #sortingSection').hide();
-                $('#tableSection, #viewSection').fadeIn(300);
-            }
-
-            function showForm() {
-                $('#tableSection, #viewSection, #sortingSection').hide();
-                $('#formSection').fadeIn(300);
-            }
-
-            function showSorting() {
-                $('#tableSection, #viewSection').hide();
-                $('#sortingSection').fadeIn(300);
-            }
-
-            // Button actions
-            $('#btnAddNew').click(showForm);
-            $('.editPage').click(showForm);
-            $('#btnCancel, #btnCancelForm').click(showTable);
-            $('#btnSorting, #btnSortingRight').click(showSorting);
-            $('#btnCloseSort').click(showTable);
-
-        });
 
         //Icon Preview
         $('#ddlIcon').on('input', function() {
@@ -587,6 +600,6 @@ $(document).ready(function () {
 
        
 
-    </script>
+</script>
 
 @endsection

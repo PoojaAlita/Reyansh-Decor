@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\{SubCategory,Category};
+use App\Models\{SubCategory};
 use Illuminate\Support\Facades\Auth;
 
 
@@ -12,9 +12,7 @@ class SubCategoryController extends Controller
 {
      public function index()
     {
-        $categories = Category::where('isshown', 1)->get();
-        $subcategories = SubCategory::with('category')->latest()->get();
-        return view('pages.subcategory', compact('subcategories','categories'));
+        return view('pages.subcategory');
     }
 
     public function store(Request $request)

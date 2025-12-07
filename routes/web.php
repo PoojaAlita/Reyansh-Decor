@@ -14,9 +14,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
    
-
-
-
 Route::prefix('users')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.users.index');
     Route::post('/store', [AdminController::class, 'store'])->name('admin.users.store');

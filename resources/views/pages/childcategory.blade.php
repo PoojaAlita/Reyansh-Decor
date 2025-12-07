@@ -36,7 +36,7 @@
         </thead>
 
         <tbody>
-          @foreach($child_categories as $key => $cc)
+          @foreach(\App\Models\ChildCategory::latest()->cursor() as $key => $cc)
           <tr>
             <td>{{ $key + 1 }}</td>
             <td>{{ $cc->subcategory->subcat_name ?? '-' }}</td>
@@ -98,7 +98,7 @@
           <label class="form-label">Sub Category</label>
           <select id="subcategory_id" name="subcategory_id" class="form-control select2 mb-2">
             <option value="" disabled selected>Select Sub Category</option>
-            @foreach($subcategories as $sc)
+            @foreach(\App\Models\SubCategory::latest()->cursor() as $key => $sc)
             <option value="{{ $sc->id }}">{{ ucfirst($sc->subcat_name) }}</option>
             @endforeach
           </select>
@@ -181,7 +181,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#childcategory_form").validate().resetForm();
     $('#childcategory_form')[0].reset();
-
+    $('#childcategory_form').find('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
 
