@@ -11,38 +11,51 @@ class AdminIconController extends Controller
 {
     public function index()
     {
-        // Fetch all admin icons, ordered by the most recent
-        $icons = AdminIcon::orderBy('id', 'desc')->get();
-        return view('pages.admin_icons', compact('icons'));
+        return view('pages.admin_icons');
     }
 
     public function store(Request $request)
     {
-        // Validation
-        $request->validate([
-            'txtName' => 'required|string|max:255',
-            'txtClass' => 'required|string|max:255',
-        ]);
+        try {
+            // Validation
+            $request->validate([
+                'txtName' => 'required|string',
+                'txtClass' => 'required|string',
+            ]);
 
-        // Save new or update existing record
-        if ($request->hId == 0) {
-            // For save new record
-            AdminIcon::create([
+            // Prepare data
+            $data = [
                 'title' => $request->txtName,
                 'class' => $request->txtClass,
                 'isshown' => 1,
+            ];
+
+            // If updating, no need to overwrite isshown
+            if ($request->hId) {
+                $data['updated_at'] = now();
+            } else {
+                $data['updated_at'] = null;
+            }
+
+            // Save or Update
+            AdminIcon::updateOrCreate(['id' => $request->hId], $data);
+
+            return response([
+                'status'  => true,
+                'message' => $request->hId ? 'Icon updated successfully!' : 'Icon added successfully!',
+                'icon'    => 'success'
             ]);
-            return redirect()->route('admin.icons.index')->with('success', 'Icon record saved successfully!');
-        } else {
-            // For update record
-            $icon = AdminIcon::findOrFail($request->hId);
-            $icon->update([
-                'title' => $request->txtName,
-                'class' => $request->txtClass,
+
+        } catch (\Throwable $e) {
+            dd($e);
+            return response([
+                'status'  => false,
+                'message' => 'Something went wrong!',
+                'icon'    => 'error'
             ]);
-            return redirect()->route('admin.icons.index')->with('success', 'Icon record updated successfully!');
         }
     }
+
 
     public function toggleStatus(Request $request)
     {

@@ -3,78 +3,9 @@
 
 @section('plugin-stylesheet')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-    <!-- Row Group CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/jstree/jstree.css') }}" />
-    <!-- Form Validation -->
-    <link href="https://cdn.jsdelivr.net/npm/jstree@3.3.15/dist/themes/default/style.min.css" rel="stylesheet">
-
-    <style>
-        #sortingSection {
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        #btnSorting.btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-
-        #viewSection .card {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        #menuTree {
-            background: #fff;
-            font-size: 14px;
-            padding-left: 10px;
-            border-radius: 6px;
-        }
-
-        #menuTree .jstree-default .jstree-anchor {
-            padding: 4px 6px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            color: #4a4a4a;
-        }
-
-        #menuTree .jstree-default .jstree-anchor:hover {
-            background-color: #eef2ff;
-            color: #2c3e50;
-        }
-
-        #menuTree .jstree-icon {
-            color: #607d8b !important;
-        }
-
-        #menuTree .jstree-wholerow-hovered {
-            background-color: #eef2ff !important;
-        }
-
-        #menuTree .jstree-wholerow-clicked {
-            background-color: #e3e9ff !important;
-        }
-
-        .btn-primary.btn-sm {
-            background-color: #4e73df;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-
-        .btn-primary.btn-sm:hover {
-            background-color: #375ac2;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+    
 @endsection
 
 @section('content')
@@ -85,7 +16,7 @@
             <div class="col-md-8" id="tableSection">
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                        <h5 class="card-title mb-0">Admin Page Records</h5>
+                        <h5 class="card-title mb-0">Module</h5>
                         <div class="d-flex gap-2">
                             <button class="btn btn-primary" id="btnAddNew">
                                 <i class="fas fa-plus"></i> Add New
@@ -95,30 +26,25 @@
                     </div>
 
                     <div class="card-datatable table-responsive pt-0">
-                        <table class="dt-responsive table-bordered table" id="admin-pages_tbl">
+                        <table class="dt-responsive table-bordered table" id="admin-pages_tbl" data-orderable="false">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 1%">#</th>
-                                    <th>Title</th>
+                                    <th>Module Name</th>
                                     <th>URL</th>
                                     <th>Parent</th>
-                                    <th style="width: 5%">Icon</th>
+                                    <th style="width: 5%">Icon Class</th>
                                     <th style="width: 22%;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-
-                                @php
-                                    // Helper recursive function
+                                 @php
                                     function renderPageRows($pages, $parentId = 0, $level = 0)
                                     {
-                                        foreach (
-                                            $pages->where('parent_id', $parentId)->sortBy('sortorder')
-                                            as $key => $p
-                                        ) {
+                                       foreach ($pages->where('parent_id', $parentId)->sortByDesc('id') as $key => $p) {
                                             echo '<tr>';
-                                            echo '<td>' . $p->id . '</td>';
-                                            echo '<td>' .
+                                            echo '<td>' . $key + 1  . '</td>';
+                                            echo '<td>' .   
                                                 str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) .
                                                 ($level > 0 ? '↳ ' : '') .
                                                 e($p->title) .
@@ -126,14 +52,11 @@
                                             echo '<td>' . e($p->url) . '</td>';
                                             echo '<td>' .
                                                 ($p->parent_id
-                                                    ? e(
-                                                        optional($pages->firstWhere('id', $p->parent_id))->title ??
-                                                            'Main',
-                                                    )
+                                                    ? e(optional($pages->firstWhere('id', $p->parent_id))->title ?? 'Main')
                                                     : 'Main') .
                                                 '</td>';
                                             echo '<td><i class="' . e($p->icon) . '"></i></td>';
-                                            echo '<td>
+                                                 echo '<td>
                                                     <button class="btn btn-icon toggle-status ' .
                                                 ($p->isshown ? 'btn-success' : 'btn-danger') .
                                                 '" 
@@ -162,14 +85,14 @@
                                                 </td>';
                                             echo '</tr>';
 
-                                            // Recursive call for child pages
                                             renderPageRows($pages, $p->id, $level + 1);
                                         }
                                     }
-                                @endphp
+                                @endphp 
+                                
 
-                                {{-- Start recursion for root level (parent_id = 0) --}}
                                 @php renderPageRows($pages, 0, 0); @endphp
+
                             </tbody>
                         </table>
                     </div>
@@ -213,7 +136,7 @@
 
 
             {{-- ✅ Sorting Section (Hidden by Default) --}}
-            <div class="col-6" id="sortingSection" style="display:none;">
+                <div class="col-6" id="sortingSection" style="display:none;">
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5>Sorting Order</h5>
@@ -247,7 +170,7 @@
             <div class="col-12" id="formSection" style="display:none;">
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <strong id="formTitle">Add New Page</strong>
+                        <h5 id="formTitle">Add New</h5>
 
                         <button id="btnCancel" type="button"
                             class="btn btn-danger d-flex align-items-center justify-content-center p-0"
@@ -256,7 +179,7 @@
                         </button>
                     </div>
                     <div class="card-body">
-                        <form id="pageForm" method="POST" action="{{ route('admin.pages.store') }}">
+                        <form id="pageForm" method="POST">
                             @csrf
                             <input type="hidden" name="hId" id="hId" value="0">
 
@@ -264,7 +187,8 @@
 
                                 <div class="col-md-4">
                                     <label>Menu</label>
-                                    <select class="form-select" name="ddlMenu" id="ddlMenu">
+                                    <select class="form-select mySelect2" name="ddlMenu" id="ddlMenu">
+                                        <option value="">Select Menu</option>
                                         <option value="0">Root Menu</option>
 
                                         @foreach ($pages->where('parent_id', 0) as $parent)
@@ -277,10 +201,11 @@
                                             @endphp
 
                                             @foreach ($children as $child)
-                                                <option value="{{ $child->id }}">--> {{ $child->title }}</option>
+                                                <option value="{{ $child->id }}"> ↳  {{ $child->title }}</option>
                                             @endforeach
                                         @endforeach
                                     </select>
+                                  
                                 </div>
 
                                 <div class="col-md-4">
@@ -296,7 +221,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label>Icon</label>
-                                    <select class="form-select" name="ddlIcon" id="ddlIcon">
+                                    <select class="form-select mySelect2" name="ddlIcon" id="ddlIcon">
                                         <option value="">Select Icon</option>
                                         @foreach ($icons as $icon)
                                             <option value="{{ $icon->class }}">{{ $icon->title }}</option>
@@ -311,7 +236,7 @@
                             </div>
 
                             <div class="text-end">
-                                <button type="submit" class="btn btn-primary px-4">Save</button>
+                                <button type="button" class="btn btn-primary px-4 submitPages">Save</button>
                                 <button type="button" class="btn btn-danger" id="btnCancelForm">Cancel</button>
                             </div>
                         </form>
@@ -327,52 +252,91 @@
 
     <!-- Vendors JS -->
     <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-    <!-- Flat Picker -->
-    <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-    <!-- Form Validation -->
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/jstree/jstree.js') }}"></script>
-    {{-- ✅ DataTables + JSTree + jQuery UI --}}
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jstree@3.3.12/dist/jstree.min.js"></script>
-    @if (session('success'))
-        <script>
-            toaster_message(@json(session('success')), "success");
-        </script>
-    @endif
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}" ></script>
+    <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
 
-    @if (session('error'))
-        <script>
-            toaster_message(@json(session('error')), "error");
-        </script>
-    @endif
+
 
     <script>
-        $(document).ready(function() {
+$(document).ready(function () {
 
-            // DataTable setup
+            if ($.fn.DataTable.isDataTable('#admin-pages_tbl')) {
+                $('#admin-pages_tbl').DataTable().clear().destroy();
+            }
+
             $('#admin-pages_tbl').DataTable({
                 pageLength: 10,
-                ordering: true,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                ordering: false,
                 searching: true,
-                lengthChange: true,
-                order: [
-                    [0, 'asc']
-                ]
+                lengthChange: true
             });
+
+        });
+
+
+        $('.mySelect2').select2({
+            width: '100%',
+            allowClear: false
+        });
+
+        $(document).ready(function() {
+
 
             // Add button
             $('#btnAddNew').click(() => {
+                $("#pageForm").validate().resetForm();
                 $('#formSection').slideDown();
-                $('#formTitle').text('Add New Page');
+                $('#formTitle').text('Add New');
                 $('#hId').val(0);
                 $('#pageForm')[0].reset();
+                 $('.mySelect2').each(function() {
+                    $(this).val(null).trigger('change');
+                });
 
                 $("#ddlMenu").trigger('focus');
             });
+
+            $('.submitPages').click(function(e){
+                e.preventDefault();
+                var form = $('#pageForm')[0];
+                var data = new FormData(form);
+
+                $.ajax({
+                    url: '/admin-pages/store',
+                    type: 'POST',
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function(data){
+                        $('#formSection').hide();
+                        $('#tableSection').show();
+                        $('#viewSection').show();
+                        toaster_message(data.message, data.icon);
+                            $.get('/admin-pages/menu-html', function(html) {
+                            $('#layout-menu').replaceWith(html);
+
+                            // ⭐ Reinitialize horizontal menu
+                            const layoutMenu = document.querySelector('#layout-menu');
+                            if(layoutMenu) {
+                                const menu = new Menu(layoutMenu, { orientation: 'horizontal' });
+                                menu.init();
+                            }
+
+                            // Optional: sidebar toggle helper
+                            if (typeof window.Helpers !== "undefined") {
+                                window.Helpers.initSidebarToggle();
+                            }
+                        });
+                        
+                    },
+                    error: function (xhr) {
+                        toaster_message('Something went wrong!', 'error');
+                    }
+                });
+            });
+
 
             $('#btnCancel').click(() => $('#formSection').slideUp());
 
@@ -390,10 +354,10 @@
                     // Now populate the form
                     $('#formTitle').text('Edit Page');
                     $('#hId').val(data.id);
-                    $('#ddlMenu').val(data.parent_id);
+                    $('#ddlMenu').val(data.parent_id).trigger('change');
                     $('#txtName').val(data.title);
                     $('#txtUrl').val(data.url);
-                    $('#ddlIcon').val(data.icon);
+                    $('#ddlIcon').val(data.icon).trigger('change');
                 });
             });
 
@@ -427,11 +391,25 @@
                             },
                             success: function(data) {
                                 if (data.status) {
-                                    toaster_message(data.message, data.icon, data
-                                        .redirect_url, aurl);
+                                    toaster_message(data.message, data.icon);
+                                      $.get('/admin-pages/menu-html', function(html) {
+                                        $('#layout-menu').replaceWith(html);
+
+                                        // ⭐ Reinitialize menu after replacement ⭐
+                                        const layoutMenu = document.querySelector('#layout-menu');
+                                        if(layoutMenu) {
+                                            const menu = new Menu(layoutMenu, { orientation: 'horizontal' }); // horizontal menu init
+                                            menu.init();
+                                        }
+
+                                        // Agar sidebar toggle helper hai
+                                        if (typeof window.Helpers !== "undefined") {
+                                            window.Helpers.initSidebarToggle();
+                                        }
+                                    });
+
                                 } else {
-                                    toaster_message(data.message, data.icon, data
-                                        .redirect_url, aurl);
+                                    toaster_message(data.message, data.icon);
                                 }
 
                             },
@@ -447,59 +425,59 @@
                 })
             });
 
-           $(document).on('click', '.toggle-status', function () {
-    var btn = $(this);
-    var id = btn.data('id');
-    var status = btn.data('status');
+            $(document).on('click', '.toggle-status', function () {
+                var btn = $(this);
+                var id = btn.data('id');
+                var status = btn.data('status');
 
-    // Hide & remove any active tooltip to prevent stacking
-    btn.tooltip('hide');
-    $(".tooltip").remove();
+                // Hide & remove any active tooltip to prevent stacking
+                btn.tooltip('hide');
+                $(".tooltip").remove();
 
-    $.ajax({
-        url: '/admin-pages/toggle-status',
-        type: 'POST',
-        data: {
-            id: id,
-            status: status,
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function (response) {
-            if (!response.success) {
-                alert(response.message || 'Something went wrong');
-                return;
-            }
+                $.ajax({
+                    url: '/admin-pages/toggle-status',
+                    type: 'POST',
+                    data: {
+                        id: id,
+                        status: status,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (response) {
+                        if (!response.success) {
+                            alert(response.message || 'Something went wrong');
+                            return;
+                        }
 
-            // Dispose old tooltip instance if any
-            try { btn.tooltip('dispose'); } catch (e) {}
+                        // Dispose old tooltip instance if any
+                        try { btn.tooltip('dispose'); } catch (e) {}
 
-            // Toggle button state and tooltip title
-            if (status == 0) {
-                btn.removeClass('btn-success')
-                   .addClass('btn-danger')
-                   .html('<i class="bx bx-hide"></i>')
-                   .attr('title', 'Click here to enable')
-                   .data('status', 1);
-            } else {
-                btn.removeClass('btn-danger')
-                   .addClass('btn-success')
-                   .html('<i class="bx bx-show"></i>')
-                   .attr('title', 'Click here to disable')
-                   .data('status', 0);
-            }
+                        // Toggle button state and tooltip title
+                        if (status == 0) {
+                            btn.removeClass('btn-success')
+                            .addClass('btn-danger')
+                            .html('<i class="bx bx-hide"></i>')
+                            .attr('title', 'Click here to enable')
+                            .data('status', 1);
+                        } else {
+                            btn.removeClass('btn-danger')
+                            .addClass('btn-success')
+                            .html('<i class="bx bx-show"></i>')
+                            .attr('title', 'Click here to disable')
+                            .data('status', 0);
+                        }
 
-            // Reinitialize tooltip on the same button
-            btn.tooltip({ container: 'body' });
+                        // Reinitialize tooltip on the same button
+                        btn.tooltip({ container: 'body' });
 
-            // Show toaster alert
-            toaster_alert_action(response.message, response.icon);
-        },
-        error: function (xhr) {
-            console.error(xhr);
-            alert('Request failed. Check console for details.');
-        }
-    });
-});
+                        // Show toaster alert
+                        toaster_alert_action(response.message, response.icon);
+                    },
+                    error: function (xhr) {
+                        console.error(xhr);
+                        alert('Request failed. Check console for details.');
+                    }
+                });
+            });
 
 
             // Sorting
@@ -569,7 +547,7 @@
             });
 
 
-            // ✅ Hide/Show Logic
+            // Hide/Show Logic
             function showTable() {
                 $('#formSection, #sortingSection').hide();
                 $('#tableSection, #viewSection').fadeIn(300);
@@ -600,12 +578,15 @@
 
             if (iconClass) {
                 $('#previewIcon')
-                    .attr('class', iconClass + ' fs-1'); // update icon + keep large size
+                    .attr('class', iconClass + ' fs-1'); 
                 $('#iconPreview').show();
             } else {
                 $('#iconPreview').hide();
             }
         });
+
+       
+
     </script>
 
 @endsection

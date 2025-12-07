@@ -1,81 +1,75 @@
-<aside id="layout-menu"
-    class="layout-menu-horizontal menu-horizontal menu bg-menu-theme flex-grow-0">
+ <aside id="layout-menu" class="layout-menu-horizontal menu-horizontal menu bg-menu-theme flex-grow-0">
+              <div class="container-xxl d-flex h-100">
+                <ul class="menu-inner">
+                  <!-- Dashboards -->
+                
+                  <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <a href="{{ route('dashboard') }}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Dashboard</div>
+                        </a>
+                    </li>
+                      {{-- @include('partials.dynamic-menu') --}}
+                        
+  @foreach($pages->where('parent_id',0)->where('isshown',1)->sortBy('sortorder') as $menu)
 
-    <div class="container-xxl d-flex h-100">
-        <ul class="menu-inner">
+                    @php
+                        $children = $pages->where('parent_id',$menu->id)
+                                            ->where('isshown',1)
+                                            ->sortBy('sortorder');
 
-            <!-- Dashboard -->
-            <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <a href="{{ route('dashboard') }}" class="menu-link">
-                    <i class="menu-icon tf-icons bx bx-home-circle"></i>
-                    <div>Dashboard</div>
-                </a>
-            </li>
+                        $hasChildren = $children->count() > 0;
 
-            <!-- Dynamic Menu -->
-            @foreach($menuTree as $menu)
+                        $isActive = isActiveUrl($menu->url)
+                                    || $children->contains(fn($c)=> isActiveUrl($c->url));
+                    @endphp
 
-                @php
-                    // Check active at any depth
-                    $isActive =
-                        isActiveUrl($menu->url) ||
-                        collect($menu->children)->contains(fn($c) => isActiveUrl($c->url)) ||
-                        collect($menu->children)->flatMap(fn($c) => $c->children)
-                            ->contains(fn($sc) => isActiveUrl($sc->url));
-                @endphp
-
-                <li class="menu-item {{ $isActive ? 'active' : '' }}">
-
-                    <a href="{{ count($menu->children) ? 'javascript:void(0)' : url($menu->url) }}"
-                       class="menu-link {{ count($menu->children) ? 'menu-toggle' : '' }}">
-
-                        <i class="menu-icon tf-icons {{ $menu->icon }}"></i>
-                        <div>{{ ucfirst($menu->title) }}</div>
+                  <li class="menu-item {{ $isActive ? 'active' : '' }}">
+                    <a href="{{ $hasChildren ? 'javascript:void(0);' : ($menu->url ?? '#') }}" class="menu-link {{ $hasChildren ? 'menu-toggle' : '' }}">
+                      <i class="menu-icon tf-icons {{ $menu->icon }}"></i>
+                      <div data-i18n="{{ ucfirst($menu->title) }}">{{ ucfirst($menu->title) }}</div>
                     </a>
+                 @if($hasChildren)
+                    
 
-                    @if(count($menu->children))
-                        <ul class="menu-sub">
-
-                            @foreach($menu->children as $child)
+                    <ul class="menu-sub">
+                         @foreach($children as $child)
 
                                 @php
-                                    $subActive =
-                                        isActiveUrl($child->url) ||
-                                        collect($child->children)->contains(fn($sc)=>isActiveUrl($sc->url));
+                                    $grand = $pages->where('parent_id',$child->id)
+                                                      ->where('isshown',1)
+                                                      ->sortBy('sortorder');
+                                    $hasGrand = $grand->count() > 0;
+                                    $activeChild = isActiveUrl($child->url)
+                                                   || $grand->contains(fn($g)=> isActiveUrl($g->url));
                                 @endphp
+                      <li class="menu-item {{ $activeChild ? 'active' : '' }}">
+                        <a href="{{ $hasGrand ? 'javascript:void(0)' : url($child->url) }}" class="menu-link {{ $hasGrand ? 'menu-toggle' : '' }}">
+                          <i class="menu-icon tf-icons {{ $child->icon }}"></i>
+                          <div data-i18n="{{ $child->title }}">{{ $child->title }}</div>
+                        </a>
 
-                                <li class="menu-item {{ $subActive ? 'active' : '' }}">
-
-                                    <a href="{{ count($child->children) ? 'javascript:void(0)' : url($child->url) }}"
-                                       class="menu-link {{ count($child->children) ? 'menu-toggle' : '' }}">
-                                        <i class="menu-icon tf-icons {{ $child->icon }}"></i>
-                                        <div>{{ ucfirst($child->title) }}</div>
-                                    </a>
-
-                                    @if(count($child->children))
+                        {{-- @if($hasGrand)
                                         <ul class="menu-sub">
-                                            @foreach($child->children as $sub)
-                                                <li class="menu-item {{ isActiveUrl($sub->url) ? 'active' : '' }}">
-                                                    <a href="{{ url($sub->url) }}" class="menu-link">
-                                                        <i class="menu-icon tf-icons {{ $sub->icon }}"></i>
-                                                        <div>{{ ucfirst($sub->title) }}</div>
+                                            @foreach($grand as $g)
+                                                <li class="menu-item {{ isActiveUrl($g->url) ? 'active' : '' }}">
+                                                    <a href="{{ url($g->url) }}" class="menu-link">
+                                                        <i class="menu-icon tf-icons {{ $g->icon }}"></i>
+                                                        <div>{{ $g->title }}</div>
                                                     </a>
                                                 </li>
                                             @endforeach
                                         </ul>
-                                    @endif
+                                    @endif --}}
+                      </li>
 
-                                </li>
-
-                            @endforeach
-
-                        </ul>
-                    @endif
-
-                </li>
-
+                     @endforeach
+                    </ul>
+                 @endif
+  
+                  </li>
             @endforeach
-
-        </ul>
-    </div>
-</aside>
+            
+                </ul>
+              </div>
+            </aside>

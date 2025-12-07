@@ -24,15 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('*', function ($view) {
-        $menuData = AdminPage::where('isshown',1)->orderBy('sortorder')->get();
-
-        $menuTree = MenuBuilder::build($menuData);
-
-        $view->with('menuTree', $menuTree);
-    
-    
-    });
+        // View::composer('*', function ($view) {
+        // $menuData = \App\Models\AdminPage::orderBy('sortorder')->get();
+        //     $view->with('menuData', $menuData);
+        // });
+            View::share('pages', AdminPage::orderBy('sortorder')->get());
 
         
     }

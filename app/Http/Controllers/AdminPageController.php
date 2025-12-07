@@ -16,30 +16,75 @@ class AdminPageController extends Controller
         return view('pages.admin_page', compact('pages', 'icons'));
     }
 
+    // public function store(Request $request)
+    // {
+    //     $id = $request->input('hId');
+    //     $parentId = $request->input('ddlMenu');
+    //     $maxSort = AdminPage::where('parent_id', $parentId)->max('sortorder') ?? 0;
+
+    //     $data = [
+    //         'title' => $request->input('txtName'),
+    //         'url' => $request->input('txtUrl'),
+    //         'icon' => $request->input('ddlIcon'),
+    //         'parent_id' => $parentId,
+    //         'sortorder' => $maxSort + 1,
+    //         'isshown' => 1
+    //     ];
+
+    //     if ($id == 0) {
+    //         AdminPage::create($data);
+    //         return back()->with('success', 'Record Saved Successfully!');
+    //     } else {
+    //         $page = AdminPage::findOrFail($id);
+    //         $page->update($data);
+    //         return back()->with('success', 'Record Updated Successfully!');
+    //     }
+    // }
+
     public function store(Request $request)
     {
-        $id = $request->input('hId');
-        $parentId = $request->input('ddlMenu');
-        $maxSort = AdminPage::where('parent_id', $parentId)->max('sortorder') ?? 0;
+        try {
+            $id = $request->hId;
+            $parentId = $request->ddlMenu;
 
-        $data = [
-            'title' => $request->input('txtName'),
-            'url' => $request->input('txtUrl'),
-            'icon' => $request->input('ddlIcon'),
-            'parent_id' => $parentId,
-            'sortorder' => $maxSort + 1,
-            'isshown' => 1
-        ];
+            // Get max sort order under the parent
+            $maxSort = AdminPage::where('parent_id', $parentId)->max('sortorder') ?? 0;
 
-        if ($id == 0) {
-            AdminPage::create($data);
-            return back()->with('success', 'Record Saved Successfully!');
-        } else {
-            $page = AdminPage::findOrFail($id);
-            $page->update($data);
-            return back()->with('success', 'Record Updated Successfully!');
+            // Prepare data
+            $data = [
+                'title'      => $request->txtName,
+                'url'        => $request->txtUrl,
+                'icon'       => $request->ddlIcon,
+                'parent_id'  => $parentId,
+                'sortorder'  => $maxSort + 1,
+                'isshown'    => 1,
+            ];
+
+            // Add timestamp depending on create/update
+            $data['updated_at'] = $id ? now() : null;
+
+            // Save or Update
+            AdminPage::updateOrCreate(
+                ['id' => $id],
+                $data
+            );
+
+            return response([
+                'status'  => true,
+                'message' => $id ? 'Record Updated Successfully!' : 'Record Saved Successfully!',
+                'icon'    => 'success'
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response([
+                'status'  => false,
+                'message' => 'Something went wrong!',
+                'icon'    => 'error'
+            ]);
         }
     }
+
 
     public function edit(Request $request)
     {
@@ -112,4 +157,22 @@ class AdminPageController extends Controller
         }
         return response()->json(['success' => true]);
     }
+
+    public function menuHtml()
+    {
+
+         $pages = AdminPage::where('isshown',1)->orderBy('sortorder')->get();
+    return view('layouts.sidebar', compact('pages'));
+    }
+
+    public function delete(Request $request)
+    {
+        $page = AdminPage::find($request->id);
+        if($page) {
+            $page->delete();
+            return response()->json(['status' => true, 'message' => 'Deleted successfully', 'icon' => 'success']);
+        }
+        return response()->json(['status' => false, 'message' => 'Not found', 'icon' => 'error']);
+    }
+
 }

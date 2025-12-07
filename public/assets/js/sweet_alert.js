@@ -1,6 +1,5 @@
 let currentLocation = window.location.pathname.split("/").filter(Boolean).pop();
 
-
 function toaster_message(message, icon, url) {
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
@@ -27,37 +26,22 @@ function toaster_message(message, icon, url) {
                         url: window.location.href,
                         type: "GET",
                         success: function (response) {
-                            // Get only new tbody HTML
-                            // let newBody = $(response).find(tableId + " tbody").html();
-                                                    let newBody = $(response).find(tableId + " tbody").html() || "";
-
-
-                            // if (newBody && newBody.trim() !== "") {
-                                // ✅ Replace only tbody (keep table instance)
-                                $(tableId + " tbody").html(newBody);
+                            
+                        let newBody = $(response).find(tableId + " tbody").html() || "";
+                             $(tableId + " tbody").html(newBody);
 
 
                                 // ✅ Reinitialize tooltips
                                 $('[data-bs-toggle="tooltip"]').tooltip();
-
-                                 $('#screenModal select').select2({
-                                    dropdownParent: $('#screenModal'),
-                                    width: '100%',
-                                    placeholder: "--Select--",
-                                    allowClear: false
-                                });
-
-                                // ✅ No need to destroy/recreate DataTable
-                                // It will keep pagination and features
-                            // } else {
-                            //     console.warn("⚠️ No tbody found in response for:", tableId);
-                            // }
+                             
                         },
 
                         error: function (xhr) {
                             console.error("❌ Failed to refresh table:", xhr.responseText);
                         }
                     });
+                }else{
+                        //  window.location.reload();
                 }
             } else {
                 window.location.href = aurl + "/" + url;
@@ -65,6 +49,64 @@ function toaster_message(message, icon, url) {
         }
     });
 }
+
+function toaster_message_f(message, icon, url, semId = null) {
+
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success",
+            cancelButton: "btn btn-danger me-2",
+        },
+        buttonsStyling: false,
+    });
+
+    swalWithBootstrapButtons.fire({
+        text: message,
+        icon: icon,
+        confirmButtonText: "Okay",
+    }).then((result) => {
+
+        if (!result.isConfirmed) return;
+
+        // If URL given → redirect
+        if (url && url !== "") {
+            window.location.href = aurl + "/" + url;
+            return;
+        }
+
+        // 🔥 Final table ID (based on semester)
+        if (semId) {
+            var tableId = "#course-mapping_tbl_" + semId;
+        } 
+
+        // 🔥 Refresh only that specific table
+        $.ajax({
+            url: window.location.href,
+            type: "GET",
+            success: function (response) {
+
+                let newBody = $(response).find(tableId + " tbody").html();
+
+                if (!newBody) {
+                    console.warn("⚠️ tbody not found!");
+                    return;
+                }
+
+                $(tableId + " tbody").html(newBody);
+
+                // Re-initialize tooltips
+                $('[data-bs-toggle="tooltip"]').tooltip();
+            },
+
+            error: function () {
+                console.error("❌ Table refresh failed");
+            }
+        });
+
+    });
+}
+
+
 
 function toaster_alert_action(message, icon, url) {
     const Toast = Swal.mixin({
@@ -108,13 +150,6 @@ function toaster_alert_action(message, icon, url) {
                     success: function (response) {
                         let newBody = $(response).find(tableId + " tbody").html();
 
-                        // if (newBody && newBody.trim() !== "") {
-                        //     $(tableId + " tbody").html(newBody);
-                        //     $('[data-bs-toggle="tooltip"]').tooltip();
-                        //     console.log("✅ Table updated successfully");
-                        // } else {
-                        //     console.warn("⚠️ No tbody found in response for:", tableId);
-                        // }
                     },
                     error: function (xhr) {
                         console.error("❌ Failed to refresh table:", xhr.responseText);

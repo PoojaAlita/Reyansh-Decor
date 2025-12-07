@@ -3,16 +3,6 @@
 
 @section('plugin-stylesheet')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-    <!-- Row Group CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-    <!-- Form Validation -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
 @endsection
 
 @section('content')
@@ -33,7 +23,7 @@
 
             <!-- Static Table -->
           <div class="card-datatable table-responsive pt-0">
-                <table class="dt-responsive table table-bordered" id="icons_tabl">
+                <table class="dt-responsive table table-bordered" id="admin-icons_tbl">
                     <thead class="table-light">
                         <tr>
                         <th style="width: 2%">#</th>
@@ -44,8 +34,8 @@
                         </tr>
                     </thead>
                      <tbody>
-                    @foreach ($icons as $icon)
-                    <tr id="row{{ $icon->id }}">
+                    @foreach(\App\Models\AdminIcon::latest()->cursor() as $key => $icon)
+                     <tr id="row{{ $icon->id }}">
                         <td>{{ $loop->iteration }}</td>
                         <td><i class="{{ $icon->class }} fs-4"></i></td>
                         <td>{{ $icon->title }}</td>
@@ -79,7 +69,7 @@
         <!-- Add/Edit Form Modal -->
             <div class="modal fade" id="iconFormModal" tabindex="-1">
                 <div class="modal-dialog">
-                    <form method="POST" action="{{ route('admin.icons.store') }}" id="iconForm" class="modal-content">
+                    <form method="POST" id="iconForm" class="modal-content">
                         @csrf
                         <input type="hidden" name="hId" id="hId" value="0">
                         <div class="modal-header">
@@ -105,7 +95,7 @@
                              </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-primary submitIcon">Save</button>
                             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
                         </div>
                     </form>
@@ -118,38 +108,18 @@
 
 @section('plugin-script')
  <!-- Vendors JS -->
-    <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-    <!-- Flat Picker -->
-    <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-    <!-- Form Validation -->
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
-
-@if (session('success'))
-<script>
-    toaster_message(@json(session('success')), "success");
-</script>
-@endif
-
-@if (session('error'))
-<script>
-    toaster_message(@json(session('error')), "error",);
-</script>
-@endif
+<script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
 <script>
 
     
 $(document).ready(function () {
 
         // DataTable setup
-        $('#icons_tabl').DataTable({
+        $('#admin-icons_tbl').DataTable({
             pageLength: 10,
             ordering: true,
             searching: true,
             lengthChange: true,
-            order: [[0, 'asc']]
         });
 
         // Add new icon
@@ -158,10 +128,33 @@ $(document).ready(function () {
             $('#iconForm')[0].reset();
             $('#hId').val(0);
             $('#iconFormModal').modal('show');
-             $('#iconFormModal').on('shown.bs.modal', function () {
-            $("#txtName").trigger('focus');
+            $('#iconFormModal').on('shown.bs.modal', function () {
+                 $("#txtName").trigger('focus');
+            });
+
         });
 
+        /* Save */
+        $('.submitIcon').click(function(e){
+            e.preventDefault();
+                var form = $('#iconForm')[0];
+                var data = new FormData(form);
+
+                $.ajax({
+                    url: '/admin-icons/store',
+                    type: 'POST',
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function(data){
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('iconFormModal'));
+                        if(modal) modal.hide();
+                        toaster_message(data.message, data.icon);
+                    },
+                    error: function (xhr) {
+                        toaster_message('Something went wrong!', 'error');
+                    }
+                });
         });
 
         // Edit icon
@@ -197,9 +190,8 @@ $(document).ready(function () {
             }).then((result) => {
                 if (result.value) {
                     $.ajax({
-                        url: aurl + "/admin-icons/delete",
+                        url: "/admin-icons/delete",
                         type: "POST",
-                        dataType: "JSON",
                         data: {
                             id: id
                         },
@@ -222,59 +214,59 @@ $(document).ready(function () {
             })
         });
 
- $(document).on('click', '.toggle-status', function () {
-    var btn = $(this);
-    var id = btn.data('id');
-    var status = btn.data('status');
+    $(document).on('click', '.toggle-status', function () {
+        var btn = $(this);
+        var id = btn.data('id');
+        var status = btn.data('status');
 
-    // Immediately remove/hide tooltip to prevent overlap
-    btn.tooltip('hide');
-    $(".tooltip").remove();
+        // Immediately remove/hide tooltip to prevent overlap
+        btn.tooltip('hide');
+        $(".tooltip").remove();
 
-    $.ajax({
-        url: '/admin-icons/toggle-status',
-        type: 'POST',
-        data: {
-            id: id,
-            status: status,
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function (response) {
-            if (!response.success) {
-                alert(response.message || 'Something went wrong');
-                return;
+        $.ajax({
+            url: '/admin-icons/toggle-status',
+            type: 'POST',
+            data: {
+                id: id,
+                status: status,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function (response) {
+                if (!response.success) {
+                    alert(response.message || 'Something went wrong');
+                    return;
+                }
+
+                // Dispose any existing tooltip instance
+                try { btn.tooltip('dispose'); } catch (e) {}
+
+                // Toggle UI state (button color, icon, title, and data-status)
+                if (status == 0) {
+                    btn.removeClass('btn-success')
+                    .addClass('btn-danger')
+                    .html('<i class="bx bx-hide"></i>')
+                    .attr('title', 'Click here to enable')
+                    .data('status', 1);
+                } else {
+                    btn.removeClass('btn-danger')
+                    .addClass('btn-success')
+                    .html('<i class="bx bx-show"></i>')
+                    .attr('title', 'Click here to disable')
+                    .data('status', 0);
+                }
+
+                // Reinitialize tooltip (attach to body to avoid clipping)
+                btn.tooltip({ container: 'body' });
+
+                // Toast success message
+                toaster_alert_action(response.message, response.icon);
+            },
+            error: function (xhr) {
+                console.error(xhr);
+                alert('Request failed. Check console for details.');
             }
-
-            // Dispose any existing tooltip instance
-            try { btn.tooltip('dispose'); } catch (e) {}
-
-            // Toggle UI state (button color, icon, title, and data-status)
-            if (status == 0) {
-                btn.removeClass('btn-success')
-                   .addClass('btn-danger')
-                   .html('<i class="bx bx-hide"></i>')
-                   .attr('title', 'Click here to enable')
-                   .data('status', 1);
-            } else {
-                btn.removeClass('btn-danger')
-                   .addClass('btn-success')
-                   .html('<i class="bx bx-show"></i>')
-                   .attr('title', 'Click here to disable')
-                   .data('status', 0);
-            }
-
-            // Reinitialize tooltip (attach to body to avoid clipping)
-            btn.tooltip({ container: 'body' });
-
-            // Toast success message
-            toaster_alert_action(response.message, response.icon);
-        },
-        error: function (xhr) {
-            console.error(xhr);
-            alert('Request failed. Check console for details.');
-        }
+        });
     });
-});
 
 
     //Icon Preview
@@ -283,7 +275,7 @@ $(document).ready(function () {
 
         if (iconClass) {
             $('#previewIcon')
-                .attr('class', iconClass + ' fs-1'); // update icon + keep large size
+                .attr('class', iconClass + ' fs-1'); 
             $('#iconPreview').show();
         } else {
             $('#iconPreview').hide();
