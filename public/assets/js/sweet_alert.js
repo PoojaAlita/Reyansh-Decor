@@ -1,5 +1,55 @@
 let currentLocation = window.location.pathname.split("/").filter(Boolean).pop();
 
+// function toaster_message(message, icon, url) {
+//     const swalWithBootstrapButtons = Swal.mixin({
+//         customClass: {
+//             confirmButton: "btn btn-success",
+//             cancelButton: "btn btn-danger me-2",
+//         },
+//         buttonsStyling: false,
+//     });
+
+//     swalWithBootstrapButtons.fire({
+//         text: message,
+//         icon: icon,
+//         confirmButtonText: "Okay",
+//         reverseButtons: true,
+//     }).then((result) => {
+//         if (result.isConfirmed) {
+//             if (typeof url === "undefined" || url === "") {
+//                 let segments = window.location.pathname.split("/").filter(Boolean);
+//                 let currentLocation = segments[segments.length - 1];
+//                 let tableId = "#" + currentLocation + "_tbl";
+
+//                 if ($(tableId).length) {
+//                     $.ajax({
+//                         url: window.location.href,
+//                         type: "GET",
+//                         success: function (response) {
+                            
+//                         let newBody = $(response).find(tableId + " tbody").html() || "";
+//                              $(tableId + " tbody").html(newBody);
+
+
+//                                 // ✅ Reinitialize tooltips
+//                                 $('[data-bs-toggle="tooltip"]').tooltip();
+                             
+//                         },
+
+//                         error: function (xhr) {
+//                             console.error("❌ Failed to refresh table:", xhr.responseText);
+//                         }
+//                     });
+//                 }else{
+//                         //  window.location.reload();
+//                 }
+//             } else {
+//                 window.location.href = aurl + "/" + url;
+//             }
+//         }
+//     });
+// }
+
 function toaster_message(message, icon, url) {
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
@@ -26,22 +76,43 @@ function toaster_message(message, icon, url) {
                         url: window.location.href,
                         type: "GET",
                         success: function (response) {
-                            
-                        let newBody = $(response).find(tableId + " tbody").html() || "";
-                             $(tableId + " tbody").html(newBody);
+                            // Fetch new tbody HTML
+                            let newBody = $(response).find(tableId + " tbody").html() || "";
 
+                            // Destroy old DataTable if exists
+                            if ($.fn.DataTable.isDataTable(tableId)) {
+                                $(tableId).DataTable().destroy();
+                            }
 
-                                // ✅ Reinitialize tooltips
-                                $('[data-bs-toggle="tooltip"]').tooltip();
-                             
+                            // Replace tbody
+                            $(tableId + " tbody").html(newBody);
+
+                            // Reinitialize DataTable with pageLength 10
+                            $(tableId).DataTable({
+                                pageLength: 10,
+                                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                                ordering: false,
+                                searching: true,
+                                lengthChange: true
+                            });
+
+                            // Reinitialize tooltips
+                            $('[data-bs-toggle="tooltip"]').tooltip();
+
+                            // Optional: Reinitialize Select2 inside table if any
+                            $(tableId + " .mySelect2").select2({
+                                width: '100%',
+                                allowClear: false
+                            });
                         },
 
                         error: function (xhr) {
                             console.error("❌ Failed to refresh table:", xhr.responseText);
                         }
                     });
-                }else{
-                        //  window.location.reload();
+                } else {
+                    // fallback
+                    window.location.reload();
                 }
             } else {
                 window.location.href = aurl + "/" + url;

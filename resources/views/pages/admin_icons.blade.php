@@ -125,6 +125,8 @@ $(document).ready(function () {
         // Add new icon
         $('#addNew').click(function () {
             $('#iconFormModal .modal-title').text('Add Icon');
+            $("#iconForm").validate().resetForm();
+            $('.is-invalid').removeClass('is-invalid');
             $('#iconForm')[0].reset();
             $('#hId').val(0);
             $('#iconFormModal').modal('show');
@@ -152,15 +154,21 @@ $(document).ready(function () {
                         toaster_message(data.message, data.icon);
                     },
                     error: function (xhr) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('iconFormModal'));
+                        if(modal) modal.hide();
                         toaster_message('Something went wrong!', 'error');
                     }
                 });
         });
 
         // Edit icon
-        $('.edit-icon').click(function () {
+        $(document).on('click', '.edit-icon', function () {
             var id = $(this).data('id');
+
             $.get('/admin-icons/edit', { id: id }, function (data) {
+                $("#iconForm").validate().resetForm();
+                $('.is-invalid').removeClass('is-invalid');
+                $('#iconForm')[0].reset();
                 $('#iconFormModal .modal-title').text('Edit Icon');
                 $('#hId').val(data.id);
                 $('#txtName').val(data.title);
@@ -168,6 +176,7 @@ $(document).ready(function () {
                 $('#iconFormModal').modal('show');
             });
         });
+
 
         // Delete icon
         $(document).on("click", ".delete", function () {

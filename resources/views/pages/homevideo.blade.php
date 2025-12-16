@@ -163,10 +163,12 @@
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
-<script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
 <script>
 
 $('#homevideo_tbl').DataTable();
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
 
 $(document).on('click', '#btnCloseSort', function () {
 
@@ -192,8 +194,31 @@ $("#homevideo_form").validate({
         video_url: { required: "Please Enter Video URL" }
     },
     errorElement: "div",
-    errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+    errorClass: "text-danger",
+
+    errorPlacement: function(error, element) {
+
+        if (element.hasClass("select2-hidden-accessible")) {
+            error.insertAfter(element.next('.select2'));  
+        } else {
+            error.insertAfter(element);
+        }
+    },
+
+    highlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').addClass("is-invalid");
+        } else {
+            $(element).addClass("is-invalid");
+        }
+    },
+    unhighlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').removeClass("is-invalid");
+        } else {
+            $(element).removeClass("is-invalid");
+        }
+    }
 });
 
 /* Unique Check */
@@ -218,7 +243,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#homevideo_form").validate().resetForm();
     $('#homevideo_form')[0].reset();
-
+    $('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
 
     new bootstrap.Modal(document.getElementById('homevideoModal')).show();
@@ -258,6 +283,9 @@ $(document).on('click', '.editHomeVideo', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') },
     function(res){
         if(res.status){
+            $("#homevideo_form").validate().resetForm();
+            $('#homevideo_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#title').val(res.data.title);
             $('#video_url').val(res.data.video_url);

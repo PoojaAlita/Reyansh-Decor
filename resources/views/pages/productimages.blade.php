@@ -3,9 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
 
@@ -133,6 +130,10 @@ $('.select2').select2({
     dropdownParent: $('#productImageModal')
 });
 
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
+
 $('#productimages_tbl').DataTable();
 
 /* jQuery Validation */
@@ -150,10 +151,10 @@ $("#productimage_form").validate({
     },
     messages: {
         product_id: {
-            required: "Please select a product"
+            required: "Please Select A Product"
         },
         image: {
-            required: "Please upload an image",
+            required: "Please Upload An Image",
             extension: "Only JPG, JPEG, PNG, WEBP allowed"
         }
     },
@@ -192,8 +193,8 @@ $("#productimage_form").validate({
 $('#createNew').click(function() {
     $("#productimage_form").validate().resetForm();
     $('#productimage_form')[0].reset();
+    $('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
-    $('#productimage_form').find('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
 
     new bootstrap.Modal(document.getElementById('productImageModal')).show();
@@ -229,6 +230,9 @@ $(document).on('click', '.editProductImage', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') }, 
     function(res){
         if(res.status){
+             $("#productimage_form").validate().resetForm();
+            $('#productimage_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#product_id').val(res.data.product_id).trigger('change');
             new bootstrap.Modal(document.getElementById('productImageModal')).show();

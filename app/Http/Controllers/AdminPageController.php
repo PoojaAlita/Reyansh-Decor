@@ -16,30 +16,6 @@ class AdminPageController extends Controller
         return view('pages.admin_page', compact('pages', 'icons'));
     }
 
-    // public function store(Request $request)
-    // {
-    //     $id = $request->input('hId');
-    //     $parentId = $request->input('ddlMenu');
-    //     $maxSort = AdminPage::where('parent_id', $parentId)->max('sortorder') ?? 0;
-
-    //     $data = [
-    //         'title' => $request->input('txtName'),
-    //         'url' => $request->input('txtUrl'),
-    //         'icon' => $request->input('ddlIcon'),
-    //         'parent_id' => $parentId,
-    //         'sortorder' => $maxSort + 1,
-    //         'isshown' => 1
-    //     ];
-
-    //     if ($id == 0) {
-    //         AdminPage::create($data);
-    //         return back()->with('success', 'Record Saved Successfully!');
-    //     } else {
-    //         $page = AdminPage::findOrFail($id);
-    //         $page->update($data);
-    //         return back()->with('success', 'Record Updated Successfully!');
-    //     }
-    // }
 
     public function store(Request $request)
     {

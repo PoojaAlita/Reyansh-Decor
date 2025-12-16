@@ -133,6 +133,10 @@ $('#productvideo_tbl').DataTable();
 
 $('.select2').select2({ dropdownParent: $('#productvideoModal') });
 
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
+
 /* VALIDATION */
 $("#productvideo_form").validate({
     rules: {
@@ -146,8 +150,31 @@ $("#productvideo_form").validate({
         video_url: { required: "Please Enter Video URL" }
     },
     errorElement: "div",
-    errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+    errorClass: "text-danger",
+
+    errorPlacement: function(error, element) {
+
+        if (element.hasClass("select2-hidden-accessible")) {
+            error.insertAfter(element.next('.select2'));  
+        } else {
+            error.insertAfter(element);
+        }
+    },
+
+    highlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').addClass("is-invalid");
+        } else {
+            $(element).addClass("is-invalid");
+        }
+    },
+    unhighlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').removeClass("is-invalid");
+        } else {
+            $(element).removeClass("is-invalid");
+        }
+    }
 });
 
 /* Unique Check */
@@ -170,6 +197,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#productvideo_form").validate().resetForm();
     $('#productvideo_form')[0].reset();
+    $('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
     new bootstrap.Modal(document.getElementById('productvideoModal')).show();
     $('#productvideoModal').on('shown.bs.modal', function () { $("#product_id").trigger('focus'); });
@@ -205,6 +233,9 @@ $(document).on('click', '.editProductVideo', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') },
     function(res){
         if(res.status){
+            $("#productvideo_form").validate().resetForm();
+            $('#productvideo_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#product_id').val(res.data.product_id);
             $('#title').val(res.data.title);

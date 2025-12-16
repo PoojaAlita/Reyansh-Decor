@@ -116,13 +116,17 @@
                             <ul>
                                 @foreach ($pages->where('parent_id', 0) as $menu)
 
-                                    <li data-jstree='{"icon" : "{{ $menu->icon ?? 'bx bx-folder' }}"}'>
+                                    {{-- <li data-jstree='{"icon" : "{{ $menu->icon ?? 'bx bx-folder' }}"}'> --}}
+                                        <li id="node_{{ $menu->id }}" data-jstree='{"icon" : "{{ $menu->icon ?? 'bx bx-folder' }}"}'>
+
                                         {{ $menu->title }}
                                         @php $children = $pages->where('parent_id', $menu->id); @endphp
                                         @if ($children->count() > 0)
                                             <ul>
                                                 @foreach ($children as $child)
-                                                    <li data-jstree='{"icon" : "{{ $child->icon ?? 'bx bx-file' }}"}'>
+                                                    {{-- <li data-jstree='{"icon" : "{{ $child->icon ?? 'bx bx-file' }}"}'> --}}
+                                                        <li id="node_{{ $child->id }}" data-jstree='{"icon" : "{{ $child->icon ?? 'bx bx-file' }}"}'>
+
                                                         {{ $child->title }}
                                                     </li>
                                                 @endforeach
@@ -138,7 +142,7 @@
 
 
             {{-- ✅ Sorting Section (Hidden by Default) --}}
-                <div class="col-6" id="sortingSection" style="display:none;">
+            <div class="col-6" id="sortingSection" style="display:none;">
                 <div class="card mt-4 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5>Sorting Order</h5>
@@ -256,8 +260,8 @@
     <script src="{{ asset('assets/vendor/libs/jstree/jstree.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}" ></script>
     <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
-
 <script>
+            $('#module_tbl').DataTable();
 
             $('.mySelect2').select2({
                 width: '100%',
@@ -266,18 +270,9 @@
 
             $(document).ready(function() {
 
-                if ($.fn.DataTable.isDataTable('#admin-pages_tbl')) {
-                    $('#admin-pages_tbl').DataTable().clear().destroy();
-                }
-
-                $('#admin-pages_tbl').DataTable({
-                    pageLength: 10,
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-                    ordering: false,
-                    searching: true,
-                    lengthChange: true
+                $(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
                 });
-
                 /* VALIDATION */
                 $("#pageForm").validate({
                     rules: {
@@ -300,13 +295,31 @@
                     $('#formTitle').text('Add New');
                     $('#hId').val(0);
                     $('#pageForm')[0].reset();
-                    $('#pageForm').find('.is-invalid').removeClass('is-invalid');
+                    $('.is-invalid').removeClass('is-invalid');
 
                     $('.mySelect2').each(function() {
                         $(this).val(null).trigger('change');
                     });
 
                     $("#ddlMenu").trigger('focus');
+                });
+
+                  // JSTree
+                $('#menuTree').jstree({
+                    core: {
+                        themes: {
+                            responsive: true,
+                            "variant": "large",
+                            "dots": true,
+                            "icons": true
+                        },
+                         "check_callback": true
+                    },
+                });
+
+                // auto open first-level menus
+                $('#menuTree').on('ready.jstree', function() {
+                    $('#menuTree').jstree('open_all');
                 });
 
                 $('.submitPages').click(function(e){
@@ -322,11 +335,19 @@
                             processData: false,
                             contentType: false,
                             success: function(data){
+
+                                //Add Select box
+                                let newOption = `<option value="${data.data.id}">${data.data.title}</option>`;
+                                $("#ddlMenu option[value='0']").after(newOption);
+                                $("#ddlMenu").val(data.data.id).trigger("change");
+                                // End Add Select box value
+
                                 $('#formSection').hide();
                                 $('#tableSection').show();
                                 $('#viewSection').show();
                                 toaster_message(data.message, data.icon);
-                                    $.get('/admin-pages/menu-html', function(html) {
+
+                                $.get('/admin/module/menu-html', function(html) {
                                     $('#layout-menu').replaceWith(html);
 
                                     // ⭐ Reinitialize horizontal menu
@@ -340,7 +361,10 @@
                                     if (typeof window.Helpers !== "undefined") {
                                         window.Helpers.initSidebarToggle();
                                     }
+                                    
                                 });
+
+                                 
                                 
                             },
                             error: function (xhr) {
@@ -350,9 +374,7 @@
                     }
                 });
 
-
                 $('#btnCancel').click(() => $('#formSection').slideUp());
-
 
                 // Edit
                 $(document).on('click', '.editPage', function() {
@@ -363,7 +385,8 @@
                     }, function(data) {
 
                         showForm();
-
+                        $("#pageForm").validate().resetForm();
+                        $('.is-invalid').removeClass('is-invalid');
                         // Now populate the form
                         $('#formTitle').text('Edit Page');
                         $('#hId').val(data.id);
@@ -404,8 +427,13 @@
                                 },
                                 success: function(data) {
                                     if (data.status) {
+                                        
+                                        $('#ddlMenu option[value="'+id+'"]').remove();
+                                        let tree = $('#menuTree').jstree(true);
+                                            tree.delete_node("node_" + id);
+
                                         toaster_message(data.message, data.icon);
-                                        $.get('/admin-pages/menu-html', function(html) {
+                                        $.get('/admin/module/menu-html', function(html) {
                                             $('#layout-menu').replaceWith(html);
 
                                             // ⭐ Reinitialize menu after replacement ⭐
@@ -484,6 +512,21 @@
 
                             // Show toaster alert
                             toaster_alert_action(response.message, response.icon);
+                            $.get('/admin/module/menu-html', function (html) {
+                                $('#layout-menu').replaceWith(html);
+
+                                // Reinitialize horizontal menu
+                                const layoutMenu = document.querySelector('#layout-menu');
+                                if(layoutMenu) {
+                                    const menu = new Menu(layoutMenu, { orientation: 'horizontal' });
+                                    menu.init();
+                                }
+
+                                // Reinitialize helpers if needed
+                                if (typeof window.Helpers !== "undefined") {
+                                    window.Helpers.initSidebarToggle();
+                                }
+                            });
                         },
                         error: function (xhr) {
                             console.error(xhr);
@@ -491,7 +534,6 @@
                         }
                     });
                 });
-
 
                 // Sorting
                 $('#ddlMenuForSorting').change(function() {
@@ -523,7 +565,6 @@
                     });
                 });
 
-
                 $('#btnSaveSort').click(function() {
                     let order = [];
                     $('#sortable li').each(function(i, li) {
@@ -540,23 +581,6 @@
                         $('#viewSection').show();
 
                     });
-                });
-
-                // JSTree
-                $('#menuTree').jstree({
-                    core: {
-                        themes: {
-                            responsive: true,
-                            "variant": "large",
-                            "dots": true,
-                            "icons": true
-                        }
-                    },
-                });
-
-                // auto open first-level menus
-                $('#menuTree').on('ready.jstree', function() {
-                    $('#menuTree').jstree('open_all');
                 });
 
 
@@ -597,8 +621,6 @@
                 $('#iconPreview').hide();
             }
         });
-
-       
 
 </script>
 

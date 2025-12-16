@@ -188,10 +188,6 @@
 @section('plugin-script')
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 
 <script>
@@ -199,6 +195,10 @@
 $('.select2').select2({
     dropdownParent: $('#productModal')
 });
+
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
 
 $('#product_tbl').DataTable();
 
@@ -269,7 +269,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#product_form").validate().resetForm();
     $('#product_form')[0].reset();
-    $('#product_form').find('.is-invalid').removeClass('is-invalid');
+     $('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
 
@@ -304,6 +304,9 @@ $(document).on('click', '.editProduct', function(){
      { id: $(this).data('id'), _token: $('meta[name=\"csrf-token\"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#product_form").validate().resetForm();
+            $('#product_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#category_id').val(res.data.category_id).trigger('change', [res.data.subcategory_id, res.data.child_category_id]);
             $('#name').val(res.data.name);

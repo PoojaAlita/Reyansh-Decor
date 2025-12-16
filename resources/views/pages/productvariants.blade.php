@@ -3,12 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
 
@@ -146,10 +140,6 @@
 @section('plugin-script')
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 
 <script>
@@ -157,6 +147,10 @@
 $('.select2').select2({
     dropdownParent: $('#productvariantModal')
 });
+
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
 
 $('#productvariants_tbl').DataTable();
 
@@ -225,7 +219,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#productvariant_form").validate().resetForm();
     $('#productvariant_form')[0].reset();
-
+    $('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
 
@@ -257,6 +251,9 @@ $(document).on('click', '.editProductVariant', function(){
      { id: $(this).data('id'), _token: $('meta[name=\"csrf-token\"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#productvariant_form").validate().resetForm();
+            $('#productvariant_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#product_id').val(res.data.product_id).trigger('change');
             $('#size').val(res.data.size);

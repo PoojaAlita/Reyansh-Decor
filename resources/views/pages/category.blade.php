@@ -142,7 +142,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#category_form").validate().resetForm();
     $('#category_form')[0].reset();
-    $('#category_form').find('.is-invalid').removeClass('is-invalid');
+    $('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
     new bootstrap.Modal(document.getElementById('categoryModal')).show();
     $('#categoryModal').on('shown.bs.modal', function () { $("#name").trigger('focus'); });
@@ -167,6 +167,9 @@ $(document).on('click', '.editCategory', function(){
     $.post('/category/edit', { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#category_form").validate().resetForm();
+            $('#category_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#name').val(res.data.name);
             new bootstrap.Modal(document.getElementById('categoryModal')).show();

@@ -127,6 +127,10 @@ $('.select2').select2({
     dropdownParent: $('#subcategoryModal')
 });
 
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
+
 $('#subcategory_tbl').DataTable();
 
 /* VALIDATION */
@@ -141,7 +145,9 @@ $("#subcategory_form").validate({
     },
     errorElement: "div",
     errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+    errorPlacement: function (error, element) { error.insertAfter(element); },
+    highlight: function (element) { $(element).addClass("is-invalid"); },
+    unhighlight: function (element) { $(element).removeClass("is-invalid"); }
 });
 
 /* Unique Check */
@@ -165,7 +171,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#subcategory_form").validate().resetForm();
     $('#subcategory_form')[0].reset();
-    $('#subcategory_form').find('.is-invalid').removeClass('is-invalid');
+    $('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
     $('#subcategoryModal select').each(function() {
@@ -195,6 +201,9 @@ $(document).on('click', '.editSubCategory', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#subcategory_form").validate().resetForm();
+            $('#subcategory_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#category_id').val(res.data.category_id).trigger('change');
             $('#name').val(res.data.subcat_name);

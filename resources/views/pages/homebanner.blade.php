@@ -172,8 +172,31 @@ $("#homebanner_form").validate({
         title: { required: "Please Enter Title" }
     },
     errorElement: "div",
-    errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+    errorClass: "text-danger",
+
+    errorPlacement: function(error, element) {
+
+        if (element.hasClass("select2-hidden-accessible")) {
+            error.insertAfter(element.next('.select2'));  
+        } else {
+            error.insertAfter(element);
+        }
+    },
+
+    highlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').addClass("is-invalid");
+        } else {
+            $(element).addClass("is-invalid");
+        }
+    },
+    unhighlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').removeClass("is-invalid");
+        } else {
+            $(element).removeClass("is-invalid");
+        }
+    }
 });
 
 /* Unique Check */
@@ -198,7 +221,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#homebanner_form").validate().resetForm();
     $('#homebanner_form')[0].reset();
-
+     $('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
 
     new bootstrap.Modal(document.getElementById('homebannerModal')).show();
@@ -238,6 +261,9 @@ $(document).on('click', '.editHomeBanner', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') },
     function(res){
         if(res.status){
+            $("#homebanner_form").validate().resetForm();
+            $('#homebanner_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#title').val(res.data.title);
             $('#link').val(res.data.link);

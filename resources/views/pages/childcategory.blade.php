@@ -3,12 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
 
@@ -127,10 +121,6 @@
 @section('plugin-script')
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 
 <script>
@@ -138,6 +128,11 @@
 $('.select2').select2({
     dropdownParent: $('#childcategoryModal')
 });
+
+
+$(document).on("change", ".select2-hidden-accessible", function () {
+                    $(this).valid(); 
+                });
 
 $('#childcategory_tbl').DataTable();
 
@@ -155,7 +150,9 @@ $("#childcategory_form").validate({
     },
     errorElement: "div",
     errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+    errorPlacement: function (error, element) { error.insertAfter(element); },
+    highlight: function (element) { $(element).addClass("is-invalid"); },
+    unhighlight: function (element) { $(element).removeClass("is-invalid"); }
 });
 
 /* Unique Check */
@@ -181,7 +178,7 @@ $.validator.addMethod(
 $('#createNew').click(function() {
     $("#childcategory_form").validate().resetForm();
     $('#childcategory_form')[0].reset();
-    $('#childcategory_form').find('.is-invalid').removeClass('is-invalid');
+    $('.is-invalid').removeClass('is-invalid');
     $(".select2").val('').trigger('change');
     $('#id').val('');
 
@@ -213,6 +210,9 @@ $(document).on('click', '.editChildCategory', function(){
      { id: $(this).data('id'), _token: $('meta[name=\"csrf-token\"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#childcategory_form").validate().resetForm();
+            $('#childcategory_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#subcategory_id').val(res.data.subcategory_id).trigger('change');
             $('#name').val(res.data.name);
