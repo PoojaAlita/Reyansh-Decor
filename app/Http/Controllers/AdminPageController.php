@@ -11,13 +11,12 @@ class AdminPageController extends Controller
     public function index()
     {
 
-        $pages = AdminPage::orderByDesc('id')->get();
+        $pages = AdminPage::latest('id')->get();
         $icons = AdminIcon::where('isshown', 1)->orderBy('title')->get();
         return view('pages.admin_page', compact('pages', 'icons'));
     }
 
-
-    public function store(Request $request)
+     public function store(Request $request)
     {
         try {
             $id = $request->hId;
@@ -40,13 +39,14 @@ class AdminPageController extends Controller
             $data['updated_at'] = $id ? now() : null;
 
             // Save or Update
-            AdminPage::updateOrCreate(
+           $adminPage =  AdminPage::updateOrCreate(
                 ['id' => $id],
                 $data
             );
 
             return response([
                 'status'  => true,
+                'data' => $adminPage,
                 'message' => $id ? 'Record Updated Successfully!' : 'Record Saved Successfully!',
                 'icon'    => 'success'
             ]);
@@ -60,7 +60,6 @@ class AdminPageController extends Controller
             ]);
         }
     }
-
 
     public function edit(Request $request)
     {
@@ -134,11 +133,10 @@ class AdminPageController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function menuHtml()
+     public function menuHtml()
     {
-
          $pages = AdminPage::where('isshown',1)->orderBy('sortorder')->get();
-    return view('layouts.sidebar', compact('pages'));
+         return view('layouts.sidebar', compact('pages'));
     }
 
     public function delete(Request $request)
@@ -150,5 +148,4 @@ class AdminPageController extends Controller
         }
         return response()->json(['status' => false, 'message' => 'Not found', 'icon' => 'error']);
     }
-
 }

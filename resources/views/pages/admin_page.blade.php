@@ -261,7 +261,7 @@
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}" ></script>
     <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
 <script>
-            $('#module_tbl').DataTable();
+            $('#admin-pages_tbl').DataTable();
 
             $('.mySelect2').select2({
                 width: '100%',
@@ -347,7 +347,7 @@
                                 $('#viewSection').show();
                                 toaster_message(data.message, data.icon);
 
-                                $.get('/admin/module/menu-html', function(html) {
+                                $.get('/admin-pages/menu-html', function(html) {
                                     $('#layout-menu').replaceWith(html);
 
                                     // ⭐ Reinitialize horizontal menu
@@ -433,7 +433,7 @@
                                             tree.delete_node("node_" + id);
 
                                         toaster_message(data.message, data.icon);
-                                        $.get('/admin/module/menu-html', function(html) {
+                                        $.get('/admin-pages/menu-html', function(html) {
                                             $('#layout-menu').replaceWith(html);
 
                                             // ⭐ Reinitialize menu after replacement ⭐
@@ -512,7 +512,7 @@
 
                             // Show toaster alert
                             toaster_alert_action(response.message, response.icon);
-                            $.get('/admin/module/menu-html', function (html) {
+                            $.get('/admin-pages/menu-html', function (html) {
                                 $('#layout-menu').replaceWith(html);
 
                                 // Reinitialize horizontal menu

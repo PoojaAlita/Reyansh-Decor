@@ -4,6 +4,7 @@
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/comman/buttons.dataTables.min.css') }}">
 @endsection
 
 @section('content')
@@ -13,12 +14,25 @@
   <div class="card mt-4 shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="card-title mb-0">Product Videos</h5>
-
-      <div class="d-flex gap-2">
-        <button type="button" class="btn btn-primary create-new" id="createNew">
+        <div class="d-flex align-items-center">
+        <!-- Add New Button -->
+        <button type="button" class="btn btn-primary create-new me-2" id="createNew">
           <i class="fas fa-plus me-1"></i> Add New
         </button>
 
+        <!-- Export Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-dark" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-download me-1"></i>
+            Export
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+            <li><a class="dropdown-item export-btn" data-export="copy" href="#">Copy</a></li>
+            <li><a class="dropdown-item export-btn" data-export="csv" href="#">CSV</a></li>
+            <li><a class="dropdown-item export-btn" data-export="excel" href="#">Excel</a></li>
+            <li><a class="dropdown-item export-btn" data-export="pdf" href="#">PDF</a></li>
+            <li><a class="dropdown-item export-btn" data-export="print" href="#">Print</a></li>
+          </ul>
+        </div>
       </div>
     </div>
 
@@ -128,8 +142,108 @@
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
+<script src="{{ asset('assets/comman/dataTables.buttons.min.js')}}"></script>
+<script src="{{ asset('assets/comman/jszip.min.js')}}"></script>
+<script src="{{ asset('assets/comman/pdfmake.min.js')}}"></script>
+<script src="{{ asset('assets/comman/vfs_fonts.js')}}"></script>
+<script src="{{ asset('assets/comman/buttons.html5.min.js')}}"></script>
+<script src="{{ asset('assets/comman/buttons.print.min.js')}}"></script>
 <script>
-$('#productvideo_tbl').DataTable();
+var table = $('#productvideo_tbl').DataTable({
+      dom:
+          "<'row align-items-center mb-3'<'col-md-6 d-flex align-items-center'l><'col-md-6 text-end'f>>" +
+          "rt" +
+          "<'row mt-3'<'col-md-6'i><'col-md-6 text-end'p>>",
+
+      buttons: [
+          {
+              extend: 'copy',
+              className: 'd-none',
+              name: 'copy',
+              exportOptions: { columns: ':not(:last-child)' }
+          },
+          
+          {
+              extend: 'csv',
+              className: 'd-none',
+              name: 'csv',
+              exportOptions: { columns: ':not(:last-child)' }
+          },
+          {
+              extend: 'excel',
+              className: 'd-none',
+              name: 'excel',
+              exportOptions: { columns: ':not(:last-child)' }
+          },
+          
+          {
+            extend: 'pdf',
+            className: 'd-none',
+            name: 'pdf',
+            exportOptions: { columns: ':not(:last-child)' },
+
+            customize: function (doc) {
+
+                // Center title
+                doc.content[0].alignment = 'center';
+                doc.content[0].margin = [0, 0, 0, 15];
+
+                var table = doc.content[1].table;
+                var body = table.body;
+
+                // Set equal widths
+                var colCount = body[0].length;
+                table.widths = new Array(colCount).fill('*');
+
+                body.forEach(function (row, rowIndex) {
+                    row.forEach(function (cell) {
+
+                        // convert string cell to object
+                        if (typeof cell === 'string') {
+                            cell = { text: cell };
+                        }
+
+                        // add border to EVERY cell
+                        cell.border = [true, true, true, true];  
+
+                        // padding inside the cell
+                        cell.margin = [5, 4, 5, 4];
+                    });
+                });
+
+                // ⭐ Layout for lines
+                doc.content[1].layout = {
+                    hLineWidth: function () { return 0.8; },
+                    vLineWidth: function () { return 0.8; },
+                    hLineColor: function () { return '#000'; },
+                    vLineColor: function () { return '#000'; },
+                };
+
+                // Header style
+                doc.styles.tableHeader.fillColor = '#2C3E50';
+                doc.styles.tableHeader.color = 'white';
+                doc.styles.tableHeader.bold = true;
+                doc.styles.tableHeader.fontSize = 11;
+
+                doc.defaultStyle.fontSize = 10;
+                doc.pageMargins = [20, 40, 20, 40];
+            }
+          },
+        
+          {
+              extend: 'print',
+              className: 'd-none',
+              name: 'print',
+              exportOptions: { columns: ':not(:last-child)' }
+          }
+      ]
+});
+
+  $('.export-btn').on('click', function(e) {
+      e.preventDefault();
+      var type = $(this).data('export');
+      table.button(type + ':name').trigger();
+  });
 
 $('.select2').select2({ dropdownParent: $('#productvideoModal') });
 
@@ -145,7 +259,7 @@ $("#productvideo_form").validate({
         video_url: { required: true },
     },
     messages: {
-        product_id: { required: "Please select product" },
+        product_id: { required: "Please Select Product" },
         title: { required: "Please Enter Title" },
         video_url: { required: "Please Enter Video URL" }
     },

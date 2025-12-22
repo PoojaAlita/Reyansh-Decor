@@ -2,9 +2,10 @@
 
 function isActiveUrl($url)
 {
-    if (!$url) return false;
+   if (!$url) return false;
 
-    $url = ltrim($url, '/');
+    $current = trim(request()->path(), '/');
+    $url = trim($url, '/');
 
-    return request()->is($url) || request()->is($url.'/*');
+    return $current === $url;
 }

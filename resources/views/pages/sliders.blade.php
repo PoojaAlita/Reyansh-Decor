@@ -3,13 +3,6 @@
 
 @section('plugin-stylesheet')
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-rowgroup-bs5/rowgroup.bootstrap5.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/formvalidation/dist/css/formValidation.min.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
 
 @section('content')
@@ -137,12 +130,6 @@
 @section('plugin-script')
 
 <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
-
 <script>
 
 $('#sliders_tbl').DataTable();
@@ -155,20 +142,45 @@ $("#slider_form").validate({
     messages: {
         title: { required: "Please Enter Title" },
     },
-    errorElement: "div",
-    errorClass: "text-danger mt-1",
-    errorPlacement: function (error, element) { error.insertAfter(element); }
+     errorElement: "div",
+    errorClass: "text-danger",
+
+    errorPlacement: function(error, element) {
+
+        if (element.hasClass("select2-hidden-accessible")) {
+            error.insertAfter(element.next('.select2'));  
+        } else {
+            error.insertAfter(element);
+        }
+    },
+
+    highlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').addClass("is-invalid");
+        } else {
+            $(element).addClass("is-invalid");
+        }
+    },
+    unhighlight: function (element) {
+        if ($(element).hasClass("select2-hidden-accessible")) {
+            $(element).next('.select2').find('.select2-selection').removeClass("is-invalid");
+        } else {
+            $(element).removeClass("is-invalid");
+        }
+    }
 });
 
 /* Create */
 $('#createNew').click(function() {
     $("#slider_form").validate().resetForm();
     $('#slider_form')[0].reset();
-    $('#slider_form').find('.is-invalid').removeClass('is-invalid');
+    $('.is-invalid').removeClass('is-invalid');
     $('#id').val('');
     $('#preview_image').html('');
 
     new bootstrap.Modal(document.getElementById('sliderModal')).show();
+   $('#sliderModal').on('shown.bs.modal', function () { $("#title").trigger('focus'); });
+
 });
 
 /* Save */
@@ -199,6 +211,9 @@ $(document).on('click', '.editSlider', function(){
      { id: $(this).data('id'), _token: $('meta[name="csrf-token"]').attr('content') }, 
     function(res){
         if(res.status){
+            $("#slider_form").validate().resetForm();
+            $('#slider_form')[0].reset();
+            $('.is-invalid').removeClass('is-invalid');
             $('#id').val(res.data.id);
             $('#title').val(res.data.title);
             $('#sub_title').val(res.data.sub_title);

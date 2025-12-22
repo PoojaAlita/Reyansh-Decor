@@ -11,10 +11,10 @@
                     </li>
                       {{-- @include('partials.dynamic-menu') --}}
                         
-  @foreach($pages->where('parent_id',0)->where('isshown',1)->sortBy('sortorder') as $menu)
+  @foreach($menuData->where('parent_id',0)->where('isshown',1)->sortBy('sortorder') as $menu)
 
                     @php
-                        $children = $pages->where('parent_id',$menu->id)
+                        $children = $menuData->where('parent_id',$menu->id)
                                             ->where('isshown',1)
                                             ->sortBy('sortorder');
 
@@ -36,7 +36,7 @@
                          @foreach($children as $child)
 
                                 @php
-                                    $grand = $pages->where('parent_id',$child->id)
+                                    $grand = $menuData->where('parent_id',$child->id)
                                                       ->where('isshown',1)
                                                       ->sortBy('sortorder');
                                     $hasGrand = $grand->count() > 0;
