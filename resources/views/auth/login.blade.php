@@ -8,7 +8,7 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>@yield('title') Login | UMS</title>
+    <title>@yield('title') Login | Reyansh Decor</title>
 
     <meta name="description" content="" />
 
@@ -114,7 +114,7 @@
                             <div class="divider-text">❤️</div>
                         </div>
 
-                        <div class="d-flex justify-content-center">
+                        {{-- <div class="d-flex justify-content-center">
                             <p class="text-center">
                                 <span>Proudly created by</span>
                                 <a href="https://www.greenhightech.in/" target="_blank">
@@ -127,7 +127,7 @@
                                     <span>+91-7600-6400-90</span>
                                 </a>
                             </p>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <!-- /Register -->
