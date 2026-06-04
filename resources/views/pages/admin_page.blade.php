@@ -39,12 +39,12 @@
                             </thead>
                             <tbody>
                                  @php
-                                    function renderPageRows($pages, $parentId = 0, $level = 0)
+                                    function renderPageRows($pages, $parentId = 0, $level = 0, &$counter = 1)
                                     {
-                                       foreach ($pages->where('parent_id', $parentId)->sortByDesc('id') as $key => $p) {
+                                       foreach ($pages->where('parent_id', $parentId)->sortBy('sortorder') as $p) {
  
                                             echo '<tr>';
-                                            echo '<td>' . $key + 1  . '</td>';
+                                            echo '<td>' . $counter++  . '</td>';
                                             echo '<td>' .   
                                                 str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) .
                                                 ($level > 0 ? '↳ ' : '') .
@@ -86,13 +86,15 @@
                                                 </td>';
                                             echo '</tr>';
 
-                                            renderPageRows($pages, $p->id, $level + 1);
+                                            renderPageRows($pages, $p->id, $level + 1, $counter);
                                         }
                                     }
                                 @endphp 
-                                
 
-                                @php renderPageRows($pages, 0, 0); @endphp
+                                @php 
+                                    $counter = 1;
+                                    renderPageRows($pages, 0, 0, $counter); 
+                                @endphp
 
                             </tbody>
                         </table>
@@ -111,7 +113,7 @@
                         </button>
                     </div>
 
-                    <div class="card-body pt-3">
+                    <div class="card-body pt-3" style="max-height: 600px; overflow-y: auto;">
                         <div id="menuTree">
                             <ul>
                                 @foreach ($pages->where('parent_id', 0) as $menu)
@@ -141,32 +143,37 @@
             </div>
 
 
-            {{-- ✅ Sorting Section (Hidden by Default) --}}
-            <div class="col-6" id="sortingSection" style="display:none;">
-                <div class="card mt-4 shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5>Sorting Order</h5>
-                        <hr />
-
+             {{-- ✅ Sorting Section (Hidden by Default) --}}
+            <div class="col-md-8 mx-auto" id="sortingSection" style="display:none;">
+                <div class="card mt-4 shadow-sm border-0">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white border-0 pb-0 pt-4">
+                        <h5 class="fw-semibold text-secondary mb-0">Sorting Order</h5>
                         <button type="button" id="btnCloseSort"
-                            class="btn btn-danger d-flex align-items-center justify-content-center p-0"
-                            data-bs-dismiss="modal" aria-label="Close" style="width: 32px; height: 32px;">
+                            class="btn btn-danger d-flex align-items-center justify-content-center p-0 shadow-sm"
+                            title="Close" style="width: 32px; height: 32px;">
                             <i class='bx bx-x fs-5'></i>
                         </button>
                     </div>
-                    <div class="card-body row">
-
-                        <div class="col-md-8">
-
-                            <select id="ddlMenuForSorting" class="form-select mb-3">
+                    <div class="card-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Select Menu Level</label>
+                            <select id="ddlMenuForSorting" class="form-select mySelect2">
                                 <option value="" disabled selected> Select Menu</option>
                                 <option value="0">Root Menu</option>
                                 @foreach ($pages->where('parent_id', 0) as $menu)
                                     <option value="{{ $menu->id }}">{{ $menu->title }}</option>
                                 @endforeach
                             </select>
-                            <ul id="sortable" class="list-group mb-3"></ul>
-                            <button class="btn btn-primary" id="btnSaveSort">Save</button>
+                        </div>
+                        
+                        <div class="p-3 bg-light rounded shadow-sm border" style="min-height: 100px;">
+                            <ul id="sortable" class="list-group"></ul>
+                        </div>
+                        
+                        <div class="text-end mt-4">
+                            <button class="btn btn-primary px-4 shadow-sm" id="btnSaveSort">
+                                <i class="fas fa-save me-1"></i> Save Order
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -261,7 +268,11 @@
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}" ></script>
     <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
 <script>
-            $('#admin-pages_tbl').DataTable();
+            $('#admin-pages_tbl').DataTable({
+                ordering: false,
+                pageLength: 10,
+                lengthMenu: [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ]
+            });
 
             $('.mySelect2').select2({
                 width: '100%',
@@ -270,7 +281,7 @@
 
             $(document).ready(function() {
 
-                $(document).on("change", ".select2-hidden-accessible", function () {
+                $(document).on("change", "#pageForm .select2-hidden-accessible", function () {
                     $(this).valid(); 
                 });
                 /* VALIDATION */

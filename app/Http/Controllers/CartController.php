@@ -13,7 +13,8 @@ class CartController extends Controller
 {
     public function index()
     {
-        return view('pages.cart');
+        $carts = Cart::where('admin_id', Auth::id())->with(['product', 'variant'])->get();
+        return view('frontend.cart', compact('carts'));
     }
 
     public function store(Request $request)

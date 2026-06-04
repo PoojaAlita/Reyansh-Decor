@@ -29,8 +29,17 @@ class AppServiceProvider extends ServiceProvider
         // URL::forceScheme('https');
 
        View::composer('*', function ($view) {
-        $menuData = \App\Models\AdminPage::orderBy('sortorder')->get();
-            $view->with('menuData', $menuData);
+            $menuData = \App\Models\AdminPage::orderBy('sortorder')->get();
+            $frontendCategories = \App\Models\Category::where('isshown', 1)->orderBy('name')->get();
+            $cartCount = \Illuminate\Support\Facades\Auth::check() 
+                ? \App\Models\Cart::where('admin_id', \Illuminate\Support\Facades\Auth::id())->sum('quantity') 
+                : 0;
+
+            $view->with([
+                'menuData' => $menuData,
+                'frontendCategories' => $frontendCategories,
+                'cartCount' => $cartCount
+            ]);
         });
         
     }

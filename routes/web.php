@@ -1,14 +1,21 @@
 <?php
 
-use App\Http\Controllers\{ProfileController,AdminController,AdminIconController,AdminPageController,CategoryController,SubCategoryController,ChildCategoryController,ProductController,ProductImageController,ProductVariantController,SliderController,HomeVideoController,HomeBannerController,CartController,ProductVideoController,MenuController};
+use App\Http\Controllers\{ProfileController,AdminController,AdminIconController,AdminPageController,CategoryController,SubCategoryController,ChildCategoryController,ProductController,ProductImageController,ProductVariantController,SliderController,HomeVideoController,HomeBannerController,CartController,ProductVideoController,MenuController,FrontendController,EnquiryController};
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () {
+Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about');
+Route::get('/category/{id}', [FrontendController::class, 'category'])->name('frontend.category');
+Route::get('/product/{id}', [FrontendController::class, 'product'])->name('frontend.product');
+
+Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [FrontendController::class, 'checkout'])->name('frontend.checkout');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -155,6 +162,13 @@ Route::prefix('productvideo')->group(function () {
     Route::post('/delete', [ProductVideoController::class, 'delete'])->name('productvideo.delete');
     Route::post('/toggle-status', [ProductVideoController::class, 'toggleStatus'])->name('productvideo.toggleStatus');
     Route::post('/check-name', [ProductVideoController::class, 'checkProductVideoUnique'])->name('productvideo.checkName');
+});
+
+
+Route::prefix('enquiry')->group(function () {
+    Route::get('/', [EnquiryController::class, 'index'])->name('enquiry.index');
+    Route::post('/delete', [EnquiryController::class, 'delete'])->name('enquiry.delete');
+    Route::post('/toggle-status', [EnquiryController::class, 'toggleStatus'])->name('enquiry.toggleStatus');
 });
 
 

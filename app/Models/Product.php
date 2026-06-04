@@ -44,4 +44,16 @@ class Product extends Model
     public function childCategory() {
         return $this->belongsTo(ChildCategory::class, 'child_category_id');
     }
+
+    public function images() {
+        return $this->hasMany(ProductImage::class);
+    }
+
+    public function variants() {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function enquiries() {
+        return $this->hasMany(Enquiry::class);
+    }
 }

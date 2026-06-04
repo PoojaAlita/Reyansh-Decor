@@ -24,4 +24,14 @@ class Category extends Model
             $model->updated_at = null;
         });
     }
+
+    public function subcategories()
+    {
+        return $this->hasMany(SubCategory::class, 'category_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'category_id');
+    }
 }
